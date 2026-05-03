@@ -42,7 +42,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(globalLimiter);
 
-app.use(express.static(path.join(__dirname, '../frontend')));
+const FRONTEND_PATH = path.isAbsolute(process.env.FRONTEND_PATH || '') 
+  ? process.env.FRONTEND_PATH 
+  : path.join(process.cwd(), 'frontend');
+
+console.log('[SERVER] Sirviendo frontend desde:', FRONTEND_PATH);
+
+app.use(express.static(FRONTEND_PATH));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
@@ -62,7 +68,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/login.html'));
+  res.sendFile(path.join(FRONTEND_PATH, 'login.html'));
 });
 
 app.use(errorHandler);
