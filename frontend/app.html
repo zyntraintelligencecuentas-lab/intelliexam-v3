@@ -505,8 +505,8 @@ body::before {
 @media (max-width: 600px) {
   .chat-input-row { padding: 10px 8px env(safe-area-inset-bottom); }
   .chat-in { font-size: 14px; padding: 12px; }
-  .btn-send-text { display: none; }
-  .btn-send-icon { display: flex !important; width: 44px; height: 44px; border-radius: 50%; justify-content: center; padding: 0 !important; align-items:center }
+  .btn-send-text { display: none !important; }
+  .btn-send-icon { display: flex !important; width: 44px !important; height: 44px !important; border-radius: 50% !important; justify-content: center; padding: 0 !important; align-items:center; flex-shrink: 0; }
 }
 .chat-in {
   flex:1; background:var(--bg3); border:1px solid var(--gb);
