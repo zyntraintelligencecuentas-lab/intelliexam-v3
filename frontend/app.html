@@ -615,10 +615,34 @@ body::before {
 }
 .stat-big { font-size:30px; font-weight:700; letter-spacing:-1px; line-height:1; margin-bottom:5px; }
 
-/* ── RESPONSIVE ── */
 @media (max-width:900px) {
   .app { grid-template-columns:1fr; }
-  .sb { display:none; }
+  .sb { 
+    display:none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    z-index: 2000;
+    background: #0a0a0a;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    animation: slideRight 0.3s ease;
+  }
+  .sb.open { display: flex !important; }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1999;
+  }
+  .sidebar-overlay.open { display: block; }
+  @keyframes slideRight {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
   .bento-4 { grid-template-columns:1fr 1fr; }
   .bento-32,.bento-23 { grid-template-columns:1fr; }
   .bento-3 { grid-template-columns:1fr; }
@@ -641,6 +665,7 @@ body::before {
 <div class="orb o1"></div>
 <div class="orb o2"></div>
 <div class="orb o3"></div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="toast" id="toast"></div>
 
 <div class="app">
@@ -1382,7 +1407,10 @@ const API = (window.location.hostname === 'localhost' || window.location.hostnam
   : 'https://intelliexam-v3-production.up.railway.app/api';
 
 function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
 }
 
 // Cerrar sidebar al hacer click en un botón (solo móvil)
