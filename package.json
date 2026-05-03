@@ -1,0 +1,14 @@
+{
+  "name": "intelliexam-v3-root",
+  "version": "1.0.0",
+  "description": "Root package for IntelliExam v3",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "npm install --prefix backend",
+    "install-backend": "npm install --prefix backend"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
