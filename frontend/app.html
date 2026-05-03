@@ -169,7 +169,14 @@ body::before {
   display: flex; flex-direction: column;
   overflow: hidden;
 }
-@media (max-width: 900px) { .sb { backdrop-filter: none; background: #0a0a0a; } }
+@media (max-width: 900px) { 
+  .sb { 
+    backdrop-filter: none !important; 
+    -webkit-backdrop-filter: none !important; 
+    background: #0a0a0a !important; 
+    border-right: 1px solid #222;
+  } 
+}
 
 /* Logo */
 .sb-logo {
@@ -627,12 +634,12 @@ body::before {
     height: 100vh;
     height: 100dvh;
     z-index: 2000;
-    background: #0f0f0f; /* Solid color for better performance on Android */
-    backdrop-filter: none !important; /* No blur */
+    background: #0a0a0a !important;
+    backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     box-shadow: 10px 0 30px rgba(0,0,0,0.8);
     transform: translateX(-100%);
-    transition: transform .2s cubic-bezier(.22,1,.36,1);
+    transition: transform .2s ease;
     display: flex !important;
   }
   .sb.open { transform: translateX(0); }
@@ -646,8 +653,7 @@ body::before {
     z-index: 1999;
   }
   .sidebar-overlay.open { display: block; }
-
-  .mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .mobile-header { display: none !important; } /* Eliminar cabecera duplicada */
   
   .topbar {
     flex-direction: row !important;
