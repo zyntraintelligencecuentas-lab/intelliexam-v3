@@ -1,29 +1,46 @@
-# 🧠 INTELLIEXAM V4 - MANIFIESTO TÉCNICO CORE
-**Contexto para Auditoría de IA y Desarrollo Continuo**
+# 🧠 INTELLIEXAM V3 — TECHNICAL MANIFEST
+**Project Status**: Production Ready (v3.5 - Mobile Optimized)  
+**Lead AI Architect**: Antigravity (DeepMind)  
+**Enterprise Vision**: AI-Driven Pedagogical OS
 
-## 1. Visión del Proyecto
-IntelliExam es una plataforma diseñada para reducir la carga administrativa docente en un 80% mediante IA generativa. Se especializa en el contexto educativo mexicano (NEM 2022) y utiliza RAG para garantizar precisión pedagógica.
+---
 
-## 2. Stack Tecnológico
-- **Frontend**: HTML5, Vanilla CSS3, JavaScript (ES6+). Diseño "Bento Grid" y estética Aurora.
-- **Backend**: Node.js (v18+) con Express.
-- **Base de Datos**: 
-  - **Relacional**: Turso (SQLite Edge) para gestión de usuarios, alumnos y exámenes.
-  - **Vectorial**: Supabase Vector Store para el sistema RAG de libros SEP.
-- **IA**: OpenAI API (GPT-4o para planeaciones, GPT-4o-mini para chat rápido).
-- **Despliegue**: Railway (PaaS) con CI/CD desde GitHub.
+## 🏗️ ARCHITECTURE OVERVIEW
+IntelliExam is a specialized SaaS for teachers following the **NEM 2022 (Nueva Escuela Mexicana)** framework. It automates exam grading, performance analytics, and lesson planning using a Hybrid-RAG approach.
 
-## 3. Estructura de Archivos Clave
-- `/backend/server.js`: Punto de entrada del servidor y configuración de middleware (CORS, Static Files).
-- `/backend/src/services/ai.service.js`: Lógica de inyección de contexto RAG y prompts maestros.
-- `/frontend/app.html`: Interfaz única de usuario (SPA) con manejo de estados por navegación DOM.
-- `package.json`: Definición de scripts de despliegue y dependencias.
+### 💻 Tech Stack
+- **Frontend**: Vanilla JS (ES6+) with a custom SPA framework. Design System: Cyber-Glassmorphism (Custom CSS Variables).
+- **Backend**: Node.js + Express (Robust MVC Architecture).
+- **Database**: Turso (Edge SQLite) — Designed for low latency global access.
+- **AI Engine**: OpenAI GPT-4o-mini / GPT-4o with specialized system prompts.
+- **OCR**: Integrated processing for handwritten/printed exam scanning.
 
-## 4. Repositorio y Acceso
-- **GitHub**: [https://github.com/zyntraintelligencecuentas-lab/intelliexam-v3](https://github.com/zyntraintelligencecuentas-lab/intelliexam-v3)
-- **Producción**: [https://intelliexam-v3-production.up.railway.app](https://intelliexam-v3-production.up.railway.app)
+---
 
-## 5. Próximos Pasos (V5)
-- Implementación de WebSockets para streaming de texto.
-- Migración a arquitectura de Microservicios para el motor de OCR.
-- Sistema de pagos (Stripe) integrado para suscripciones PRO.
+## 🛠️ KEY COMPONENTS
+1. **Ameyalli IA**: A pedagogical assistant with specific context on NEM 2022.
+   - *Logic*: `backend/src/services/ai.service.js`
+2. **Edge Analytics**: Generates real-time KPIs on student risk levels.
+   - *Logic*: `backend/src/controllers/reports.controller.js`
+3. **Turso Integration**: Optimized SQL queries for student management.
+   - *Logic*: `backend/src/config/db.js`
+
+---
+
+## 📂 REPOSITORY STRUCTURE (For AI Analysis)
+- `/frontend/app.html`: Single point of truth for UI/UX and SPA logic.
+- `/backend/src/`: Core logic (Controllers, Services, Routes).
+- `/backend/src/models/`: Database schema definitions (Turso/SQLite).
+- `/Fixes_upgrade/`: Historical context of mobile and performance optimizations.
+
+---
+
+## 🚀 ROADMAP V5 PREVIEW (The "Entrepreneur" Move)
+1. **Migration to Next.js 15**: Transition from Vanilla to a structured React framework for component reusability.
+2. **Stripe Integration**: Implementation of "Free", "Teacher Pro", and "School Tier" subscription models.
+3. **Pedagogical RAG 2.0**: Direct integration with SEP (Secretaría de Educación Pública) official textbooks via vector embeddings.
+4. **Voice-to-Plan**: Ability for teachers to dictate lesson plans while driving or in class.
+
+---
+**Deployment URL**: [https://intelliexam-v3-production.up.railway.app](https://intelliexam-v3-production.up.railway.app)  
+**Context**: This manifest ensures any future AI agent can take the baton and continue development without context loss.
