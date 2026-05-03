@@ -26,7 +26,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
 app.use(cors({
   origin: (origin, callback) => {
     // Permitir requests sin origin (mobile, curl, Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('CORS: origen no permitido'));
