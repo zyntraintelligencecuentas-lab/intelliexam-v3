@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl *)",
+      "Read(//c/Users/zyntr/Projects/.claude/skills/ui-ux-pro-max/**)",
+      "Bash(python3 scripts/search.py \"educational AI SaaS dashboard futuristic 3D teacher analytics\" --design-system --persist -p \"IntelliExam\" -f markdown)"
+    ]
+  }
+}

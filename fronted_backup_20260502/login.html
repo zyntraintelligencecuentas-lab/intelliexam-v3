@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>IntelliExam · Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,600;12..96,800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #03050a;
+  --glass:       rgba(8,14,28,0.78);
+  --glass-b:     rgba(255,255,255,0.08);
+  --glass-bhi:   rgba(255,255,255,0.14);
+  --cyan:        #00f0ff;
+  --cyan-s:      rgba(0,240,255,0.09);
+  --cyan-g:      rgba(0,240,255,0.22);
+  --purple-s:    rgba(124,58,237,0.12);
+  --green:       #10ffaa;
+  --green-s:     rgba(16,255,170,0.1);
+  --red:         #ff3b5c;
+  --red-s:       rgba(255,59,92,0.12);
+  --text:        #f0f4ff;
+  --text2:       rgba(240,244,255,0.55);
+  --text3:       rgba(240,244,255,0.28);
+  --r: 16px; --r-sm: 10px; --r-xs: 6px;
+  --font: 'Bricolage Grotesque', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+#bg{position:fixed;inset:0;z-index:1;pointer-events:none}
+.orb{position:fixed;border-radius:50%;pointer-events:none;filter:blur(100px);z-index:1;animation:orbF 12s ease-in-out infinite}
+.o1{width:480px;height:480px;background:radial-gradient(circle,rgba(0,130,255,0.12),transparent 70%);top:-120px;left:-100px}
+.o2{width:380px;height:380px;background:radial-gradient(circle,rgba(124,58,237,0.1),transparent 70%);bottom:-80px;right:-80px;animation-delay:-4s}
+.o3{width:240px;height:240px;background:radial-gradient(circle,rgba(0,240,255,0.07),transparent 70%);top:45%;left:60%;animation-delay:-8s}
+@keyframes orbF{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-15px) scale(1.04)}66%{transform:translate(-12px,10px) scale(0.97)}}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:2;mix-blend-mode:overlay}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,240,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,0.018) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:1}
+
+.scene{position:relative;z-index:10;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;perspective:1400px}
+.card-wrap{transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(0.23,1,0.32,1);width:100%;max-width:420px;padding:0 20px}
+.card{background:var(--glass);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid var(--glass-b);border-radius:var(--r);padding:40px 36px;position:relative;overflow:hidden;box-shadow:0 32px 64px -16px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04),inset 0 1px 0 rgba(255,255,255,0.07)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,var(--cyan) 50%,transparent 100%);opacity:0;animation:scanL 3.5s ease-in-out infinite}
+@keyframes scanL{0%{opacity:0;transform:translateX(-100%)}20%{opacity:.6}80%{opacity:.6}100%{opacity:0;transform:translateX(100%)}}
+
+/* Logo */
+.logo-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:32px;gap:10px}
+.logo-icon{width:48px;height:48px;background:var(--cyan-s);border:1px solid rgba(0,240,255,0.22);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(0,240,255,0.12)}
+.logo-name{font-size:26px;font-weight:800;letter-spacing:-0.8px;background:linear-gradient(135deg,#fff 40%,rgba(0,240,255,0.75));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.logo-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--cyan);opacity:.65}
+
+/* Tabs */
+.mode-tabs{display:flex;gap:4px;background:rgba(0,0,0,0.25);border:1px solid var(--glass-b);border-radius:40px;padding:4px;margin-bottom:28px}
+.mode-tab{flex:1;padding:8px 0;border:none;border-radius:30px;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s ease;min-height:44px;font-weight:500}
+.mode-tab.active{background:var(--cyan-s);color:var(--cyan);border:1px solid rgba(0,240,255,0.22);box-shadow:0 0 16px rgba(0,240,255,0.1)}
+.mode-tab:not(.active){background:transparent;color:var(--text3)}
+.mode-tab:not(.active):hover{color:var(--text2);background:rgba(255,255,255,0.04)}
+
+/* Form */
+.form-group{position:relative;margin-bottom:16px}
+.form-label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.input-wrap{position:relative}
+.input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);width:16px;height:16px;pointer-events:none;transition:color 0.2s}
+.form-input{width:100%;min-height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-b);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:13px;padding:0 14px 0 42px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none}
+.form-input:focus{border-color:rgba(0,240,255,0.4);box-shadow:0 0 0 3px rgba(0,240,255,0.07),0 0 20px rgba(0,240,255,0.08)}
+.form-input:focus ~ .input-icon,.input-wrap:focus-within .input-icon{color:var(--cyan)}
+.form-input::placeholder{color:var(--text3)}
+.pwd-toggle{position:absolute;right:2px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:4px;transition:color 0.15s;display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+.pwd-toggle:hover{color:var(--cyan)}
+.form-error{display:none;font-family:var(--mono);font-size:10.5px;color:var(--red);margin-top:6px;padding:6px 10px;background:var(--red-s);border-radius:var(--r-xs);border:1px solid rgba(255,59,92,0.18)}
+.form-error.show{display:block}
+
+/* Options */
+.form-options{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.remember-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px}
+.remember-check{width:16px;height:16px;accent-color:var(--cyan);cursor:pointer}
+.remember-label{font-size:12px;color:var(--text2);cursor:pointer}
+.forgot-link{font-family:var(--mono);font-size:10.5px;color:rgba(0,240,255,0.6);text-decoration:none;letter-spacing:0.05em;transition:color 0.15s;min-height:44px;display:flex;align-items:center}
+.forgot-link:hover{color:var(--cyan)}
+
+/* Button */
+.btn-submit{width:100%;min-height:50px;background:linear-gradient(135deg,#0088ff,#0044dd);border:none;border-radius:var(--r-sm);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.15s,box-shadow 0.2s;box-shadow:0 0 28px rgba(0,100,255,0.25),inset 0 1px 0 rgba(255,255,255,0.15)}
+.btn-submit::after{content:'';position:absolute;top:0;left:-100%;width:70%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);animation:shimmer 2.8s ease-in-out infinite}
+@keyframes shimmer{0%{left:-100%}100%{left:180%}}
+.btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 40px rgba(0,140,255,0.4),inset 0 1px 0 rgba(255,255,255,0.15)}
+.btn-submit:active:not(:disabled){transform:translateY(0)}
+.btn-submit:disabled{opacity:.7;cursor:not-allowed;transform:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Footer */
+.card-footer{margin-top:20px;padding-top:18px;border-top:1px solid var(--glass-b);display:flex;flex-direction:column;gap:14px}
+.footer-reg{text-align:center;font-size:12px;color:var(--text3);font-family:var(--mono)}
+.footer-reg a{color:rgba(0,240,255,0.65);text-decoration:none;transition:color .15s}
+.footer-reg a:hover{color:var(--cyan)}
+.sec-badge{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--text3)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(12,8,18,0.92);backdrop-filter:blur(16px);border:1px solid rgba(255,59,92,0.3);border-radius:var(--r-sm);padding:12px 20px;font-family:var(--mono);font-size:12px;color:var(--red);white-space:nowrap;z-index:50;transition:transform .25s,opacity .25s;opacity:0}
+.toast.ok{border-color:rgba(16,255,170,0.3);color:var(--green)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* Success */
+.success{display:none;position:fixed;inset:0;background:var(--bg);z-index:50;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.success.show{display:flex}
+.s-icon{width:60px;height:60px;background:var(--green-s);border:1px solid rgba(16,255,170,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(16,255,170,0.2);animation:popIn .4s cubic-bezier(0.34,1.56,0.64,1) forwards}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.s-title{font-size:20px;font-weight:700}
+.s-sub{font-family:var(--mono);font-size:11px;color:rgba(16,255,170,0.7);letter-spacing:.1em}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<div class="toast" id="toast"></div>
+
+<div class="success" id="success">
+  <div class="s-icon">
+    <svg width="26" height="26" viewBox="0 0 20 20" fill="#10ffaa">
+      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+    </svg>
+  </div>
+  <div class="s-title">Acceso concedido</div>
+  <div class="s-sub">Cargando dashboard...</div>
+</div>
+
+<div class="scene" id="scene">
+  <div class="card-wrap" id="cw">
+    <div class="card">
+
+      <div class="logo-wrap">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+            <path d="M4 6L14 22L24 6H4Z" stroke="#00f0ff" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M8 6H20M10.5 10.5H17.5" stroke="#00f0ff" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="logo-name">IntelliExam</div>
+        <div class="logo-sub">Sistema de Gestión Docente · IA</div>
+      </div>
+
+      <div class="mode-tabs" role="tablist">
+        <button class="mode-tab active" id="tab-teacher" role="tab" aria-selected="true" onclick="setMode('teacher')">Profesor</button>
+        <button class="mode-tab" id="tab-student" role="tab" aria-selected="false" onclick="setMode('student')">Estudiante</button>
+      </div>
+
+      <form id="lf" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Correo electrónico</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+            </svg>
+            <input type="email" id="email" name="email" class="form-input" placeholder="correo@escuela.edu.mx" autocomplete="email" required aria-describedby="ee">
+          </div>
+          <div class="form-error" id="ee"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="pwd">Contraseña</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+            </svg>
+            <input type="password" id="pwd" name="password" class="form-input" placeholder="••••••••" autocomplete="current-password" required aria-describedby="pe" style="padding-right:52px">
+            <button type="button" class="pwd-toggle" id="ptog" onclick="togglePwd()" aria-label="Mostrar contraseña">
+              <svg id="eye" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
+          <div class="form-error" id="pe"></div>
+        </div>
+
+        <div class="form-options">
+          <label class="remember-wrap">
+            <input type="checkbox" class="remember-check" id="rem">
+            <span class="remember-label">Recordarme</span>
+          </label>
+          <a href="#" class="forgot-link" onclick="doForgot(event)">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="submit" class="btn-submit" id="bsub">
+          <span id="btxt">Acceder al Sistema</span>
+        </button>
+      </form>
+
+      <div class="card-footer">
+        <p class="footer-reg">¿Sin cuenta? <a href="#" onclick="event.preventDefault();showToast('Contacta a tu institución educativa','ok')">Contacta a tu institución →</a></p>
+        <div class="sec-badge">
+          <svg width="10" height="10" viewBox="0 0 20 20" fill="rgba(0,240,255,0.4)">
+            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          TLS cifrado · Datos protegidos · SEP-Compliant
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3001/api';
+let pviz = false, toastT = null;
+
+/* ── Particles ── */
+(()=>{
+  const c = document.getElementById('bg'), x = c.getContext('2d');
+  let W,H,pts=[];
+  const N=55,D=130;
+  const rz=()=>{W=c.width=innerWidth;H=c.height=innerHeight};
+  class P{
+    constructor(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*.38;this.vy=(Math.random()-.5)*.38;this.r=Math.random()*1.2+.4;this.cy=Math.random()>.45}
+    mv(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>W)this.vx*=-1;if(this.y<0||this.y>H)this.vy*=-1}
+    dr(){x.beginPath();x.arc(this.x,this.y,this.r,0,Math.PI*2);x.fillStyle=this.cy?'rgba(0,240,255,.38)':'rgba(124,58,237,.28)';x.fill()}
+  }
+  const init=()=>{pts=[];for(let i=0;i<N;i++)pts.push(new P())};
+  const tick=()=>{
+    x.clearRect(0,0,W,H);
+    pts.forEach((p,i)=>{
+      p.mv();p.dr();
+      for(let j=i+1;j<pts.length;j++){
+        const q=pts[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<D){x.beginPath();x.strokeStyle=`rgba(0,180,255,${(1-d/D)*.22})`;x.lineWidth=.6;x.moveTo(p.x,p.y);x.lineTo(q.x,q.y);x.stroke()}
+      }
+    });
+    requestAnimationFrame(tick);
+  };
+  window.addEventListener('resize',()=>{rz();init()});
+  rz();init();tick();
+})();
+
+/* ── 3D Tilt ── */
+(()=>{
+  const sc=document.getElementById('scene'),cw=document.getElementById('cw');
+  let tk=false;
+  sc.addEventListener('mousemove',e=>{
+    if(tk)return;tk=true;
+    requestAnimationFrame(()=>{
+      const rx=(innerWidth/2-e.pageX)/28,ry=(innerHeight/2-e.pageY)/28;
+      cw.style.transform=`rotateY(${rx}deg) rotateX(${-ry}deg)`;
+      tk=false;
+    });
+  });
+  sc.addEventListener('mouseleave',()=>cw.style.transform='');
+})();
+
+/* ── Mode ── */
+function setMode(m){
+  ['teacher','student'].forEach(k=>{
+    const t=document.getElementById(`tab-${k}`),a=k===m;
+    t.classList.toggle('active',a);
+    t.setAttribute('aria-selected',a);
+  });
+}
+
+/* ── Pwd toggle ── */
+function togglePwd(){
+  pviz=!pviz;
+  const i=document.getElementById('pwd'),b=document.getElementById('ptog'),e=document.getElementById('eye');
+  i.type=pviz?'text':'password';
+  b.setAttribute('aria-label',pviz?'Ocultar':'Mostrar');
+  e.innerHTML=pviz
+    ?`<path d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.515a4 4 0 00-5.478-5.48z"/><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>`
+    :`<path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>`;
+}
+
+/* ── Toast ── */
+function showToast(msg,type='err'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className=`toast ${type} show`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+/* ── Errors ── */
+function clrErr(){document.querySelectorAll('.form-error').forEach(e=>{e.textContent='';e.classList.remove('show')})}
+function setErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.add('show')}
+
+/* ── Validate ── */
+function validate(email,pwd){
+  let ok=true;clrErr();
+  if(!email){setErr('ee','El correo es requerido');ok=false}
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr('ee','Correo inválido');ok=false}
+  if(!pwd){setErr('pe','La contraseña es requerida');ok=false}
+  else if(pwd.length<6){setErr('pe','Mínimo 6 caracteres');ok=false}
+  return ok;
+}
+
+/* ── Loading ── */
+function setLoad(v){
+  const b=document.getElementById('bsub'),t=document.getElementById('btxt');
+  b.disabled=v;
+  t.innerHTML=v?'<span class="spinner"></span>Verificando...':'Acceder al Sistema';
+}
+
+/* ── Login API ── */
+async function doLogin(email,pwd){
+  setLoad(true);
+  try{
+    const r=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Error de autenticación');
+    const st=document.getElementById('rem').checked?localStorage:sessionStorage;
+    st.setItem('ie_token',d.access_token);
+    st.setItem('ie_user',JSON.stringify(d.user));
+    document.getElementById('success').classList.add('show');
+    setTimeout(()=>location.href='app.html',1300);
+  }catch(e){
+    setLoad(false);
+    showToast(e.message||'No se pudo conectar al servidor');
+  }
+}
+
+/* ── Forgot ── */
+async function doForgot(e){
+  e.preventDefault();
+  const email=document.getElementById('email').value.trim();
+  if(!email){setErr('ee','Ingresa tu correo primero');document.getElementById('email').focus();return}
+  try{
+    const r=await fetch(`${API}/auth/forgot-password`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const d=await r.json();
+    showToast(d.message||'Revisa tu correo','ok');
+  }catch{showToast('No se pudo enviar el enlace')}
+}
+
+/* ── Submit ── */
+document.getElementById('lf').addEventListener('submit',e=>{
+  e.preventDefault();
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('pwd').value;
+  if(validate(email,pwd))doLogin(email,pwd);
+});
+
+/* ── Auth guard ── */
+(()=>{
+  const t=localStorage.getItem('ie_token')||sessionStorage.getItem('ie_token');
+  if(t)location.href='app.html';
+})();
+</script>
+</body>
+</html>

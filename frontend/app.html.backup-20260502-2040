@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>IntelliExam · Dashboard Futurista</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   INTELLIEXAM V3 FUTURISTA · 3D GLASSMORPHISM DASHBOARD
+   Diseño: Futurista 3D con efectos holográficos
+   Stack: HTML + Tailwind-inspired + 3D CSS
+   UX: ui-ux-pro-max patterns
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Colores Base */
+  --bg: #020817;
+  --bg-light: #0f172a;
+
+  /* Glassmorphism */
+  --glass-1: rgba(15, 23, 42, 0.7);
+  --glass-2: rgba(30, 41, 59, 0.5);
+  --glass-border: rgba(148, 163, 184, 0.1);
+
+  /* Acentos Futuristas */
+  --cyan: #06b6d4;
+  --cyan-glow: rgba(6, 182, 212, 0.3);
+  --purple: #8b5cf6;
+  --purple-glow: rgba(139, 92, 246, 0.3);
+  --blue: #3b82f6;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+
+  /* Texto */
+  --text: #f8fafc;
+  --text-dim: #cbd5e1;
+  --text-muted: #64748b;
+
+  /* Fuentes */
+  --font: 'Inter', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* 3D & Animation */
+  --perspective: 1200px;
+  --rotate-angle: 2deg;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index */
+  --z-bg: 1;
+  --z-content: 10;
+  --z-nav: 20;
+  --z-modal: 50;
+  --z-toast: 100;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══ BACKGROUND 3D ═══ */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 90%, rgba(139, 92, 246, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(59, 130, 246, 0.06) 0%, transparent 70%),
+    linear-gradient(180deg, #020817 0%, #050d1f 50%, #0a0f1e 100%);
+  pointer-events: none;
+}
+
+/* Holographic Grid */
+.holo-grid {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  background-image:
+    linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  perspective: var(--perspective);
+  transform-style: preserve-3d;
+  animation: gridFloat 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes gridFloat {
+  0%, 100% { transform: rotateX(45deg) translateZ(0px); }
+  50% { transform: rotateX(48deg) translateZ(-20px); }
+}
+
+/* Floating Orbs 3D */
+.orb-3d {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  z-index: var(--z-bg);
+  pointer-events: none;
+  animation: float3d 15s ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--cyan-glow), transparent 70%);
+  top: -100px;
+  left: -100px;
+}
+
+.orb-2 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, var(--purple-glow), transparent 70%);
+  bottom: -100px;
+  right: -100px;
+  animation-delay: -7s;
+}
+
+.orb-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -3s;
+}
+
+@keyframes float3d {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -30px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* ═══ LAYOUT 3D ═══ */
+.app-container {
+  position: relative;
+  z-index: var(--z-content);
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+  perspective: var(--perspective);
+  transform-style: preserve-3d;
+  gap: 24px;
+  padding: 20px;
+}
+
+/* ═══ SIDEBAR 3D ═══ */
+.sidebar {
+  background: var(--glass-1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateZ(30px);
+  transition: var(--transition);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sidebar:hover {
+  transform: translateZ(35px) translateY(-2px);
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.6),
+    0 0 40px var(--cyan-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar Futurista */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--cyan), var(--purple));
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--cyan-glow);
+}
+
+/* Logo Section */
+.logo-section {
+  padding: 28px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(139, 92, 246, 0.05));
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: white;
+  box-shadow:
+    0 8px 24px var(--cyan-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateZ(5px);
+  transition: var(--transition);
+}
+
+.logo-icon:hover {
+  transform: translateZ(10px) scale(1.05);
+  box-shadow:
+    0 12px 32px var(--cyan-glow),
+    0 0 40px var(--purple-glow);
+}
+
+.logo-text {
+  flex: 1;
+}
+
+.logo-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--cyan), white);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.logo-subtitle {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* AI Status - Ameyalli */
+.ai-status {
+  margin: 16px 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  transform: translateZ(3px);
+  transition: var(--transition);
+}
+
+.ai-status:hover {
+  transform: translateZ(8px);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Navigation */
+.nav-container {
+  flex: 1;
+  padding: 8px 16px;
+  overflow-y: auto;
+}
+
+.nav-section {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 12px;
+  margin: 20px 0 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+  transition: width 0.3s ease;
+  opacity: 0;
+}
+
+.nav-item:hover {
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--cyan);
+  transform: translateX(4px);
+}
+
+.nav-item:hover::before {
+  width: 4px;
+  opacity: 1;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15));
+  color: var(--cyan);
+  box-shadow:
+    0 4px 12px rgba(6, 182, 212, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active::before {
+  width: 4px;
+  opacity: 1;
+  background: linear-gradient(180deg, var(--cyan), var(--purple));
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.nav-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* User Section */
+.user-section {
+  padding: 16px 20px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(139, 92, 246, 0.05));
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.user-section:hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: white;
+  box-shadow: 0 4px 12px var(--purple-glow);
+}
+
+.user-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+/* ═══ MAIN CONTENT 3D ═══ */
+.main-content {
+  background: var(--glass-1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateZ(20px);
+  transition: var(--transition);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.main-content:hover {
+  transform: translateZ(25px) translateY(-1px);
+}
+
+/* Top Bar */
+.top-bar {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.03), rgba(139, 92, 246, 0.03));
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, white, var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.search-bar {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 24px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px 10px 42px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  transition: var(--transition);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateZ(2px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  color: white;
+  box-shadow: 0 4px 12px var(--cyan-glow);
+}
+
+.btn-primary:hover {
+  transform: translateZ(8px) translateY(-2px);
+  box-shadow: 0 8px 24px var(--cyan-glow);
+}
+
+.btn-secondary {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-dim);
+  border: 1px solid var(--glass-border);
+}
+
+.btn-secondary:hover {
+  background: rgba(148, 163, 184, 0.2);
+  transform: translateZ(6px);
+}
+
+/* Content Area */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+
+/* Cards 3D */
+.card-3d {
+  background: var(--glass-2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 20px;
+  transform: translateZ(5px);
+  transition: var(--transition);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.card-3d:hover {
+  transform: translateZ(12px) translateY(-4px);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(6, 182, 212, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.card-badge {
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-cyan {
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--cyan);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Stats Cards */
+.stat-card {
+  position: relative;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  transform: translateZ(3px);
+  transition: var(--transition);
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(139, 92, 246, 0.08));
+  pointer-events: none;
+}
+.stat-card.cyan-card { border-top: 3px solid var(--cyan); box-shadow: 0 0 30px rgba(6,182,212,0.1), inset 0 0 20px rgba(6,182,212,0.03); }
+.stat-card.green-card { border-top: 3px solid var(--green); box-shadow: 0 0 30px rgba(16,185,129,0.1), inset 0 0 20px rgba(16,185,129,0.03); }
+.stat-card.purple-card { border-top: 3px solid var(--purple); box-shadow: 0 0 30px rgba(139,92,246,0.1), inset 0 0 20px rgba(139,92,246,0.03); }
+.stat-card.red-card { border-top: 3px solid var(--red); box-shadow: 0 0 30px rgba(239,68,68,0.1), inset 0 0 20px rgba(239,68,68,0.03); }
+
+.stat-card:hover {
+  transform: translateZ(10px) translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 40px rgba(6,182,212,0.15);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.stat-change {
+  font-size: 13px;
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-change.positive { color: var(--green); }
+.stat-change.negative { color: var(--red); }
+
+/* Modal Futurista */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(2, 8, 23, 0.8);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal.show {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--glass-1);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  transform: scale(0.9) translateZ(0);
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px var(--cyan-glow);
+}
+
+@keyframes modalSlideIn {
+  to {
+    transform: scale(1) translateZ(20px);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.modal-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--red);
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  transition: var(--transition);
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: var(--mono);
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+/* Table Futurista */
+.table-3d {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.table-3d thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--mono);
+  background: transparent;
+}
+
+.table-3d tbody tr {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 12px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.table-3d tbody tr:hover {
+  background: rgba(6, 182, 212, 0.1);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+}
+
+.table-3d tbody td {
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.table-3d tbody td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.table-3d tbody td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Toast Notifications */
+#toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: var(--z-toast);
+  background: var(--glass-1);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px 24px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    0 0 30px var(--cyan-glow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: slideInRight 0.3s ease;
+}
+
+#toast.show {
+  display: flex;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.toast-success { border-left: 4px solid var(--green); }
+.toast-error { border-left: 4px solid var(--red); }
+.toast-warning { border-left: 4px solid var(--amber); }
+.toast-info { border-left: 4px solid var(--cyan); }
+
+/* Loading Screen */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: opacity 0.5s ease;
+}
+
+#loading-screen.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(6, 182, 212, 0.2);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+/* ═══ RESPONSIVE DESIGN ═══ */
+@media (max-width: 1024px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .sidebar.mobile-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    margin: 12px;
+    transform: translateZ(40px);
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .search-bar {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .actions {
+    flex: 1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: 8px;
+  }
+
+  .main-content {
+    border-radius: 16px;
+  }
+
+  .content-area {
+    padding: 16px;
+  }
+
+  .card-3d {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus States for Keyboard Navigation */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.nav-item:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* Hidden */
+.hidden {
+  display: none !important;
+}
+
+/* Utility Classes */
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+.mb-4 { margin-bottom: 16px; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.cursor-pointer { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div id="bg-canvas"></div>
+<div class="holo-grid"></div>
+<div class="orb-3d orb-1"></div>
+<div class="orb-3d orb-2"></div>
+<div class="orb-3d orb-3"></div>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <div class="loader"></div>
+  <div class="loading-text">Inicializando IntelliExam...</div>
+</div>
+
+<!-- App Container -->
+<div class="app-container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Logo -->
+    <div class="logo-section">
+      <div class="logo-container">
+        <div class="logo-icon">IE</div>
+        <div class="logo-text">
+          <div class="logo-title">IntelliExam</div>
+          <div class="logo-subtitle">v3 Futurista</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Status - Ameyalli -->
+    <div class="ai-status">
+      <div class="pulse-dot"></div>
+      <span>Ameyalli IA · Activa</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-container">
+      <div class="nav-section">Principal</div>
+      <button class="nav-item active" onclick="showView('dashboard')">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" onclick="showView('students')">
+        <span class="nav-icon">👥</span>
+        <span>Estudiantes</span>
+      </button>
+      <button class="nav-item" onclick="showView('exams')">
+        <span class="nav-icon">📝</span>
+        <span>Exámenes</span>
+      </button>
+      <button class="nav-item" onclick="showView('reports')">
+        <span class="nav-icon">📈</span>
+        <span>Reportes</span>
+      </button>
+
+      <div class="nav-section">Inteligencia</div>
+      <button class="nav-item" onclick="showView('ai')">
+        <span class="nav-icon">🤖</span>
+        <span>Ameyalli IA</span>
+      </button>
+      <button class="nav-item" onclick="showView('scan')">
+        <span class="nav-icon">📸</span>
+        <span>Escanear</span>
+      </button>
+
+      <div class="nav-section">Configuración</div>
+      <button class="nav-item" onclick="showView('settings')">
+        <span class="nav-icon">⚙️</span>
+        <span>Ajustes</span>
+      </button>
+    </nav>
+
+    <!-- User Section -->
+    <div class="user-section" onclick="toggleUserMenu()">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">Usuario</div>
+        <div class="user-role">Profesor</div>
+      </div>
+      <span>⋮</span>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button class="btn-secondary" style="padding: 8px 12px; display: none;" id="menuToggle" onclick="toggleSidebar()">
+        <span style="font-size: 20px;">☰</span>
+      </button>
+      <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscar...">
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="quickAction()">
+          <span>✨</span>
+          <span>Acción Rápida</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area" id="contentArea">
+      <!-- El contenido se carga dinámicamente -->
+    </div>
+  </main>
+
+</div>
+
+<!-- Modal Importar CSV -->
+<div class="modal" id="importCSVModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Importar Estudiantes CSV</h2>
+      <button class="modal-close" onclick="closeModal('importCSVModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Formato CSV</label>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">
+        Número, Nombre, Notas (separado por comas)
+      </p>
+      <textarea class="form-textarea" id="csvData" placeholder="1,Juan Pérez,Alumno destacado
+2,María González,
+3,Carlos López,Necesita apoyo"></textarea>
+    </div>
+    <div class="flex gap-4">
+      <button class="btn btn-secondary flex-1" onclick="closeModal('importCSVModal')">Cancelar</button>
+      <button class="btn btn-primary flex-1" onclick="importStudentsCSV()">
+        <span>📥</span>
+        <span>Importar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo Estudiante -->
+<div class="modal" id="addStudentModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Registrar Nuevo Alumno</h2>
+      <button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre Completo</label>
+      <input type="text" class="form-input" id="newStudentName" placeholder="Ej: Juan Pérez García">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Número de Lista (Opcional)</label>
+      <input type="number" class="form-input" id="newStudentListNumber" placeholder="Ej: 1">
+    </div>
+    <div class="form-group">
+      <label class="form-label">CURP (Opcional)</label>
+      <input type="text" class="form-input" id="newStudentCurp" placeholder="CURP del alumno">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observaciones iniciales</label>
+      <textarea class="form-textarea" id="newStudentNotes" placeholder="Notas sobre el alumno..."></textarea>
+    </div>
+    <div class="flex gap-4">
+      <button class="btn btn-secondary flex-1" onclick="closeModal('addStudentModal')">Cancelar</button>
+      <button class="btn btn-primary flex-1" onclick="saveNewStudent()">
+        <span>👤</span>
+        <span>Registrar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Historial Ameyalli -->
+<div class="modal" id="historyModal">
+  <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-header">
+      <h2 class="modal-title">Historial de Conversaciones - Ameyalli</h2>
+      <button class="modal-close" onclick="closeModal('historyModal')">×</button>
+    </div>
+    <div id="sessionsList" style="max-height: 400px; overflow-y: auto;">
+      <!-- Se llena dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast">
+  <span class="toast-icon" id="toastIcon"></span>
+  <span class="toast-message" id="toastMessage"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// INTELLIEXAM V3 - FUTURISTA 3D DASHBOARD
+// JavaScript con todas las funcionalidades mejoradas
+// ═══════════════════════════════════════════════════════════
+
+const API_URL = 'http://localhost:3001/api';
+let currentUser = null;
+let currentView = 'dashboard';
+let chartInstances = {};
+
+// ═══ UTILITIES ═══
+function getToken() {
+  return localStorage.getItem('ie_token') || sessionStorage.getItem('ie_token');
+}
+
+function setToken(token) {
+  localStorage.setItem('ie_token', token);
+}
+
+function clearToken() {
+  localStorage.removeItem('ie_token');
+  sessionStorage.removeItem('ie_token');
+  localStorage.removeItem('ie_user');
+  sessionStorage.removeItem('ie_user');
+}
+
+async function api(endpoint, options = {}) {
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...(options.headers || {})
+  };
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
+    throw new Error(error.error || 'Error en la solicitud');
+  }
+
+  return response.json();
+}
+
+function toast(message, type = 'info') {
+  const toastEl = document.getElementById('toast');
+  const iconEl = document.getElementById('toastIcon');
+  const messageEl = document.getElementById('toastMessage');
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  iconEl.textContent = icons[type] || icons.info;
+  messageEl.textContent = message;
+
+  toastEl.className = `toast-${type}`;
+  toastEl.classList.add('show');
+
+  setTimeout(() => {
+    toastEl.classList.remove('show');
+  }, 4000);
+}
+
+// ═══ MARKDOWN PARSER ═══
+function parseMarkdown(text) {
+  if (!text) return '';
+  // Escape HTML first
+  let safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Bold **text**
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic *text*
+  safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Inline code `code`
+  safe = safe.replace(/`([^`]+)`/g, '<code style="background:rgba(6,182,212,0.15);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;">$1</code>');
+  // Bullet lists
+  safe = safe.replace(/^- (.+)$/gm, '<li style="margin-left:16px;margin-bottom:4px;">$1</li>');
+  safe = safe.replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul style="margin:8px 0;">$&</ul>');
+  // Newlines
+  safe = safe.replace(/\n/g, '<br>');
+  return safe;
+}
+
+// ═══ NAVIGATION ═══
+function showView(viewName) {
+  currentView = viewName;
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  const navBtn = event?.target?.closest?.('.nav-item');
+  if (navBtn) navBtn.classList.add('active');
+
+  const titles = {
+    dashboard: 'Dashboard',
+    students: 'Estudiantes',
+    exams: 'Exámenes',
+    reports: 'Reportes',
+    ai: 'Ameyalli IA',
+    scan: 'Escanear',
+    settings: 'Configuración'
+  };
+
+  document.getElementById('pageTitle').textContent = titles[viewName] || viewName;
+
+  const loaders = {
+    dashboard: loadDashboard,
+    students: loadStudents,
+    exams: loadExams,
+    reports: loadReports,
+    ai: loadAI,
+    scan: loadScan,
+    settings: loadSettings
+  };
+
+  if (loaders[viewName]) {
+    loaders[viewName]();
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+}
+
+function toggleUserMenu() {
+  // Implementar menú de usuario
+  toast('Menú de usuario (próximamente)', 'info');
+}
+
+function quickAction() {
+  if (currentView === 'students') {
+    openModal('importCSVModal');
+  } else if (currentView === 'ai') {
+    openModal('historyModal');
+    loadChatSessions();
+  } else {
+    toast('Acción rápida no disponible en esta vista', 'info');
+  }
+}
+
+// ═══ MODALS ═══
+function openModal(modalId) {
+  document.getElementById(modalId).classList.add('show');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('show');
+}
+
+// ═══ USER ═══
+async function loadUser() {
+  try {
+    const data = await api('/auth/me');
+    currentUser = data.user;
+    document.getElementById('userName').textContent = data.user.full_name;
+    const initials = data.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2);
+    document.getElementById('userAvatar').textContent = initials;
+  } catch (err) {
+    console.error('Error loading user:', err);
+    throw err;
+  }
+}
+
+async function logout() {
+  try {
+    await api('/auth/logout', { method: 'POST' });
+  } catch (err) {
+    console.error('Logout error:', err);
+  } finally {
+    clearToken();
+    window.location.href = 'login.html';
+  }
+}
+
+// ═══ DASHBOARD ═══
+async function loadDashboard() {
+  const contentArea = document.getElementById('contentArea');
+
+  contentArea.innerHTML = `
+    <div class="grid grid-4 mb-4">
+      <div class="stat-card cyan-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <div class="stat-label" style="color:var(--cyan);">Total Estudiantes</div>
+            <div class="stat-value" id="totalStudents" style="background:linear-gradient(135deg,var(--cyan),white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div>
+            <div class="stat-change positive">↑ conectado</div>
+          </div>
+          <div style="font-size:32px;opacity:0.5;">👥</div>
+        </div>
+      </div>
+      <div class="stat-card green-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <div class="stat-label" style="color:var(--green);">Promedio General</div>
+            <div class="stat-value" id="avgScore" style="background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">-</div>
+            <div class="stat-change positive">↑ grupo activo</div>
+          </div>
+          <div style="font-size:32px;opacity:0.5;">📊</div>
+        </div>
+      </div>
+      <div class="stat-card purple-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <div class="stat-label" style="color:var(--purple);">Exámenes</div>
+            <div class="stat-value" id="totalExams" style="background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div>
+            <div class="stat-change">Registrados</div>
+          </div>
+          <div style="font-size:32px;opacity:0.5;">📝</div>
+        </div>
+      </div>
+      <div class="stat-card red-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <div class="stat-label" style="color:var(--red);">Alertas</div>
+            <div class="stat-value" id="alerts" style="background:linear-gradient(135deg,var(--red),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div>
+            <div class="stat-change negative">Requieren atención</div>
+          </div>
+          <div style="font-size:32px;opacity:0.5;">⚠️</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card-3d" style="border-top: 2px solid var(--cyan);">
+        <div class="card-header">
+          <div class="card-title">Distribución de Calificaciones</div>
+          <span class="card-badge badge-cyan">Actual</span>
+        </div>
+        <div style="position:relative; height:220px;">
+          <canvas id="scoreDistChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card-3d" style="border-top: 2px solid var(--green);">
+        <div class="card-header">
+          <div class="card-title">Tendencia Mensual</div>
+          <span class="card-badge badge-green">Mejorando</span>
+        </div>
+        <div style="position:relative; height:220px;">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-3d mt-4" style="border-top: 2px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-title">👥 Estudiantes Recientes</div>
+        <button class="btn btn-secondary" onclick="loadStudents(); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); currentView='students';">Ver todos →</button>
+      </div>
+      <div id="recentStudents"></div>
+    </div>
+  `;
+
+  try {
+    const studentsData = await api('/students');
+    const students = studentsData.students || [];
+
+    document.getElementById('totalStudents').textContent = students.length;
+
+    if (students.length > 0) {
+      const avgScores = students.filter(s => s.avg).map(s => parseFloat(s.avg));
+      const avg = avgScores.length ? (avgScores.reduce((a, b) => a + b, 0) / avgScores.length).toFixed(1) : 0;
+      document.getElementById('avgScore').textContent = `${avg}%`;
+
+      const alerts = students.filter(s => s.avg && parseFloat(s.avg) < 60).length;
+      document.getElementById('alerts').textContent = alerts;
+
+      renderScoreDistChart(avgScores);
+      renderTrendChart();
+      renderRecentStudents(students.slice(0, 5));
+    }
+  } catch (err) {
+    console.error('Dashboard load error:', err);
+    toast('Error cargando dashboard', 'error');
+  }
+}
+
+function renderScoreDistChart(scores) {
+  const ctx = document.getElementById('scoreDistChart');
+  if (!ctx) return;
+
+  if (chartInstances.scoreDistChart) {
+    chartInstances.scoreDistChart.destroy();
+  }
+
+  const ranges = [
+    { label: '90-100', count: scores.filter(s => s >= 90).length },
+    { label: '80-89', count: scores.filter(s => s >= 80 && s < 90).length },
+    { label: '70-79', count: scores.filter(s => s >= 70 && s < 80).length },
+    { label: '60-69', count: scores.filter(s => s >= 60 && s < 70).length },
+    { label: '<60', count: scores.filter(s => s < 60).length }
+  ];
+
+  chartInstances.scoreDistChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ranges.map(r => r.label),
+      datasets: [{
+        data: ranges.map(r => r.count),
+        backgroundColor: [
+          '#10b981',
+          '#06b6d4',
+          '#f59e0b',
+          '#fb923c',
+          '#ef4444'
+        ],
+        borderWidth: 0,
+        borderRadius: 4,
+        spacing: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: '#cbd5e1',
+            font: {
+              family: 'Inter',
+              size: 11
+            },
+            boxWidth: 12,
+            padding: 12
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderTrendChart() {
+  const ctx = document.getElementById('trendChart');
+  if (!ctx) return;
+
+  if (chartInstances.trendChart) {
+    chartInstances.trendChart.destroy();
+  }
+
+  chartInstances.trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+      datasets: [{
+        label: 'Promedio',
+        data: [72, 74, 71, 76, 78, 80],
+        borderColor: '#06b6d4',
+        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 5,
+        pointBackgroundColor: '#06b6d4',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          min: 60,
+          max: 100,
+          grid: {
+            color: 'rgba(148, 163, 184, 0.1)',
+            drawBorder: false
+          },
+          ticks: {
+            color: '#64748b',
+            font: {
+              family: 'JetBrains Mono',
+              size: 10
+            }
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#64748b',
+            font: {
+              family: 'JetBrains Mono',
+              size: 10
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderRecentStudents(students) {
+  const container = document.getElementById('recentStudents');
+  if (!container) return;
+
+  if (students.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">No hay estudiantes registrados</p>';
+    return;
+  }
+
+  const html = `
+    <table class="table-3d">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Exámenes</th>
+          <th>Promedio</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${students.map(s => {
+          const avg = s.avg ? parseFloat(s.avg) : 0;
+          const badge = avg >= 80 ? 'badge-green' : avg >= 70 ? 'badge-cyan' : avg >= 60 ? 'badge-amber' : 'badge-red';
+          const status = avg >= 80 ? '✓ Excelente' : avg >= 70 ? '✓ Bien' : avg >= 60 ? '⚠ Regular' : '⚠ Atención';
+
+          return `
+            <tr onclick="viewStudent('${s.id}')">
+              <td>${s.list_number || '-'}</td>
+              <td style="color: var(--text); font-weight: 600;">${s.name}</td>
+              <td>${s.exams_count || 0}</td>
+              <td style="color: var(--text);">${avg > 0 ? avg + '%' : '-'}</td>
+              <td><span class="card-badge ${badge}">${status}</span></td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+
+  container.innerHTML = html;
+}
+
+function viewStudent(id) {
+  toast('Ver detalles del estudiante (próximamente)', 'info');
+}
+
+// ═══ STUDENTS ═══
+async function loadStudents() {
+  const contentArea = document.getElementById('contentArea');
+
+  contentArea.innerHTML = `
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <button class="btn btn-primary" onclick="openModal('importCSVModal')">
+          <span>📥</span>
+          <span>Importar CSV</span>
+        </button>
+        <button class="btn btn-secondary" onclick="addStudent()" style="margin-left: 12px;">
+          <span>➕</span>
+          <span>Nuevo</span>
+        </button>
+      </div>
+      <button class="btn btn-secondary" onclick="generateGroupPDF()">
+        <span>📄</span>
+        <span>Reporte PDF</span>
+      </button>
+    </div>
+
+    <div class="card-3d">
+      <div class="card-header">
+        <div class="card-title">Lista de Estudiantes</div>
+        <span class="card-badge badge-cyan" id="studentCount">0</span>
+      </div>
+      <div id="studentsTable"></div>
+    </div>
+  `;
+
+  try {
+    const data = await api('/students');
+    const students = data.students || [];
+
+    document.getElementById('studentCount').textContent = students.length;
+
+    if (students.length === 0) {
+      document.getElementById('studentsTable').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 60px;">No hay estudiantes. Haz clic en "Importar CSV" o "Nuevo" para comenzar.</p>';
+      return;
+    }
+
+    const html = `
+      <table class="table-3d">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Exámenes</th>
+            <th>Promedio</th>
+            <th>Tendencia</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map(s => {
+            const avg = s.avg ? parseFloat(s.avg) : 0;
+            const trend = s.trend ? parseFloat(s.trend) : 0;
+            const badge = avg >= 80 ? 'badge-green' : avg >= 70 ? 'badge-cyan' : avg >= 60 ? 'badge-amber' : 'badge-red';
+            const status = avg >= 80 ? 'Excelente' : avg >= 70 ? 'Bien' : avg >= 60 ? 'Regular' : 'Atención';
+
+            return `
+              <tr>
+                <td>${s.list_number || '-'}</td>
+                <td style="color: var(--text); font-weight: 600;">${s.name}</td>
+                <td>${s.exams_count || 0}</td>
+                <td style="color: var(--text);">${avg > 0 ? avg + '%' : '-'}</td>
+                <td style="color: ${trend > 0 ? 'var(--green)' : trend < 0 ? 'var(--red)' : 'var(--text-muted)'};">
+                  ${trend > 0 ? '↑' : trend < 0 ? '↓' : '→'} ${Math.abs(trend)}
+                </td>
+                <td><span class="card-badge ${badge}">${status}</span></td>
+                <td>
+                  <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="viewStudent('${s.id}')">Ver</button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById('studentsTable').innerHTML = html;
+  } catch (err) {
+    console.error('Students load error:', err);
+    toast('Error cargando estudiantes', 'error');
+  }
+}
+
+function addStudent() {
+  openModal('addStudentModal');
+}
+
+async function saveNewStudent() {
+  const name = document.getElementById('newStudentName').value.trim();
+  const list_number = document.getElementById('newStudentListNumber').value;
+  const curp = document.getElementById('newStudentCurp').value.trim();
+  const notes = document.getElementById('newStudentNotes').value.trim();
+
+  if (!name) {
+    toast('El nombre es obligatorio', 'warning');
+    return;
+  }
+
+  try {
+    await api('/students', {
+      method: 'POST',
+      body: JSON.stringify({ name, list_number, curp, notes })
+    });
+
+    closeModal('addStudentModal');
+    toast('✅ Alumno registrado correctamente', 'success');
+    
+    // Clear fields
+    document.getElementById('newStudentName').value = '';
+    document.getElementById('newStudentListNumber').value = '';
+    document.getElementById('newStudentCurp').value = '';
+    document.getElementById('newStudentNotes').value = '';
+
+    loadStudents();
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function generateGroupPDF() {
+  toast('⏳ Generando reporte grupal...', 'info');
+  try {
+    const data = await api('/reports/group-pdf');
+    if (data.html) {
+      const win = window.open('', '_blank');
+      win.document.write(data.html);
+      win.document.close();
+      // El HTML devuelto tiene window.print() al final
+    }
+  } catch (err) {
+    toast('Error al generar PDF', 'error');
+  }
+}
+
+// ═══ IMPORTAR CSV ═══
+async function importStudentsCSV() {
+  const csvData = document.getElementById('csvData').value.trim();
+
+  if (!csvData) {
+    toast('Por favor ingresa datos CSV', 'warning');
+    return;
+  }
+
+  try {
+    const result = await api('/students/import', {
+      method: 'POST',
+      body: JSON.stringify({ csv_data: csvData })
+    });
+
+    closeModal('importCSVModal');
+    toast(`✓ ${result.imported} estudiantes importados`, 'success');
+
+    if (result.errors > 0) {
+      toast(`⚠ ${result.errors} errores encontrados`, 'warning');
+    }
+
+    document.getElementById('csvData').value = '';
+    loadStudents();
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+// ═══ REPORTS & PDF ═══
+async function loadReports() {
+  const contentArea = document.getElementById('contentArea');
+
+  contentArea.innerHTML = `
+    <div class="grid grid-2 mb-4">
+      <div class="card-3d cursor-pointer" onclick="generateGroupPDF()">
+        <div class="card-header">
+          <div class="card-title">Reporte Grupal</div>
+          <span style="font-size: 32px;">📊</span>
+        </div>
+        <p style="color: var(--text-dim); font-size: 14px;">Genera un PDF con las estadísticas completas del grupo</p>
+      </div>
+
+      <div class="card-3d cursor-pointer" onclick="generatePlaneacionPDF()">
+        <div class="card-header">
+          <div class="card-title">Planeación Didáctica</div>
+          <span style="font-size: 32px;">📝</span>
+        </div>
+        <p style="color: var(--text-dim); font-size: 14px;">Genera una planeación con ayuda de Ameyalli IA</p>
+      </div>
+    </div>
+
+    <div class="card-3d">
+      <div class="card-header">
+        <div class="card-title">Historial de Reportes</div>
+      </div>
+      <div id="reportsHistory">
+        <p style="color: var(--text-muted); text-align: center; padding: 40px;">No hay reportes generados</p>
+      </div>
+    </div>
+  `;
+}
+
+async function generateGroupPDF() {
+  try {
+    toast('Generando reporte grupal...', 'info');
+
+    const result = await api('/reports/pdf/group', { method: 'POST' });
+
+    if (result.html) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(result.html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
+
+      toast('✓ Reporte generado', 'success');
+    }
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function generatePlaneacionPDF() {
+  const materia = prompt('Materia:');
+  if (!materia) return;
+
+  const grado = prompt('Grado:');
+  if (!grado) return;
+
+  const tema = prompt('Tema:');
+  if (!tema) return;
+
+  try {
+    toast('Ameyalli está generando tu planeación...', 'info');
+
+    const result = await api('/reports/pdf/planeacion', {
+      method: 'POST',
+      body: JSON.stringify({ materia, grado, tema })
+    });
+
+    if (result.html) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(result.html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
+
+      toast('✓ Planeación generada', 'success');
+    }
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+// ═══ AMEYALLI IA ═══
+async function loadAI() {
+  const contentArea = document.getElementById('contentArea');
+
+  contentArea.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Ameyalli IA</h2>
+        <p style="color:var(--text-muted);font-size:12px;font-family:var(--mono);margin-top:2px;">★ Asistente pedagógica · NEM 2022 · RAG SEP activo</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" style="font-size:12px;padding:8px 14px;" onclick="newChatSession()">
+          <span>➕</span> Nueva Sesión
+        </button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:8px 14px;" onclick="openModal('historyModal'); loadChatSessions();">
+          <span>🕒</span> Historial
+        </button>
+      </div>
+    </div>
+
+    <div class="card-3d" style="height:calc(100vh - 310px);display:flex;flex-direction:column;border-top:2px solid var(--purple);padding:0;overflow:hidden;">
+      <div id="chatMessages" style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;">
+        <div style="text-align:center;padding:40px 20px;">
+          <div style="width:72px;height:72px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 32px rgba(139,92,246,0.4);">🤖</div>
+          <h3 style="font-size:22px;font-weight:800;background:linear-gradient(135deg,white,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">Hola, soy Ameyalli</h3>
+          <p style="color:var(--text-dim);font-size:14px;max-width:400px;margin:0 auto 24px;line-height:1.6;">Tu asistente pedagógica especializada en educación primaria mexicana y NEM 2022.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+            ${['Genera una planeación de matemáticas', '¿Cómo identificar alumnos en riesgo?', 'Crea 5 preguntas de Español 3°', 'Explica los campos formativos NEM', 'Actividades para reforzar lectura'].map(q => `<button style="padding:8px 14px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:20px;color:var(--purple);font-size:12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(139,92,246,0.3)'" onmouseout="this.style.background='rgba(139,92,246,0.15)'" onclick="document.getElementById('chatInput').value='${q}';sendMessage();">${q}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--glass-border);padding:16px 20px;background:rgba(2,8,23,0.4);">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="text" id="chatInput" class="form-input" placeholder="Escribe tu pregunta a Ameyalli..." style="flex:1;" onkeypress="if(event.key==='Enter') sendMessage()">
+          <button class="btn btn-primary" onclick="sendMessage()" style="padding:12px 20px;background:linear-gradient(135deg,var(--purple),var(--cyan));">
+            <span>➤</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+
+  if (!message) return;
+
+  input.value = '';
+  input.disabled = true;
+
+  const messagesContainer = document.getElementById('chatMessages');
+
+  // Agregar mensaje del usuario
+  messagesContainer.innerHTML += `
+    <div style="align-self: flex-end; max-width: 70%; background: rgba(6, 182, 212, 0.15); padding: 12px 16px; border-radius: 16px 16px 4px 16px; border: 1px solid rgba(6, 182, 212, 0.3);">
+      <p style="color: var(--text); font-size: 14px; margin: 0;">${message}</p>
+    </div>
+  `;
+
+  // Agregar indicador de escritura
+  messagesContainer.innerHTML += `
+    <div id="typingIndicator" style="align-self: flex-start; max-width: 70%; background: rgba(139, 92, 246, 0.1); padding: 12px 16px; border-radius: 16px 16px 16px 4px; border: 1px solid rgba(139, 92, 246, 0.2);">
+      <p style="color: var(--text-muted); font-size: 14px; margin: 0;">Ameyalli está escribiendo...</p>
+    </div>
+  `;
+
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  try {
+    const result = await api('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+
+    // Remover indicador
+    document.getElementById('typingIndicator').remove();
+
+    // Agregar respuesta de Ameyalli con markdown renderizado
+    let responseHtml = `
+      <div style="align-self: flex-start; max-width: 78%; background: linear-gradient(135deg,rgba(139,92,246,0.12),rgba(6,182,212,0.08)); padding: 16px 20px; border-radius: 16px 16px 16px 4px; border: 1px solid rgba(139,92,246,0.25); box-shadow: 0 4px 20px rgba(139,92,246,0.1);">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">🤖</div>
+          <span style="font-weight: 700; color: var(--purple); font-size:13px;">Ameyalli</span>
+          <span style="font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-left:auto;">${result.tokens_used || 0} tokens · RAG: ${result.rag_used ? '✅' : '⚡'}</span>
+        </div>
+        <div style="color: var(--text); font-size: 14px; line-height: 1.7;">${parseMarkdown(result.content)}</div>
+    `;
+
+    // Detectar si la respuesta parece ser una planeación para ofrecer descarga
+    if (result.content.toLowerCase().includes('planeación') || result.content.toLowerCase().includes('didáctica')) {
+      responseHtml += `
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(139,92,246,0.2);">
+          <button class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px; width: 100%; justify-content: center;" 
+                  onclick="generatePlaneacionPDF('Educación', '${currentUser?.grade || 'Grado'}', 'Personalizada')">
+            <span>📄</span> Descargar esta Planeación en PDF
+          </button>
+        </div>
+      `;
+    }
+
+    responseHtml += `</div>`;
+    messagesContainer.innerHTML += responseHtml;
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  } catch (err) {
+    document.getElementById('typingIndicator').remove();
+    toast(`Error: ${err.message}`, 'error');
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+// ═══ HISTORIAL DE CHATS ═══
+async function loadChatSessions() {
+  try {
+    const data = await api('/ai/sessions');
+    const sessions = data.sessions || [];
+
+    const container = document.getElementById('sessionsList');
+
+    if (sessions.length === 0) {
+      container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">No hay conversaciones guardadas</p>';
+      return;
+    }
+
+    const html = sessions.map(s => {
+      const preview = s.first_user_msg ? s.first_user_msg.substring(0, 70) + (s.first_user_msg.length > 70 ? '...' : '') : 'Conversación sin título';
+      const dateStr = s.last_msg_at ? new Date(s.last_msg_at).toLocaleDateString('es-MX', {day:'numeric',month:'short',year:'numeric'}) : '';
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:8px;background:rgba(15,23,42,0.5);border:1px solid var(--glass-border);border-radius:12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--cyan)';this.style.background='rgba(6,182,212,0.08)'" onmouseout="this.style.borderColor='var(--glass-border)';this.style.background='rgba(15,23,42,0.5)'" onclick="viewSession('${s.session_id}')">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💬</div>
+          <div style="flex:1;overflow:hidden;">
+            <div style="font-weight:600;color:var(--text);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${preview}</div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:var(--mono);margin-top:3px;">${s.msg_count} mensajes · ${dateStr}</div>
+          </div>
+          <button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--red);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px;flex-shrink:0;" onclick="event.stopPropagation(); deleteSession('${s.session_id}')" title="Eliminar">
+            🗑️
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html;
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function viewSession(sessionId) {
+  try {
+    const data = await api(`/ai/sessions/${sessionId}`);
+    const messages = data.messages || [];
+
+    closeModal('historyModal');
+    showView('ai');
+
+    setTimeout(() => {
+      const messagesContainer = document.getElementById('chatMessages');
+      messagesContainer.innerHTML = messages.map(m => {
+        if (m.role === 'user') {
+          return `
+            <div style="align-self: flex-end; max-width: 70%; background: rgba(6, 182, 212, 0.15); padding: 12px 16px; border-radius: 16px 16px 4px 16px; border: 1px solid rgba(6, 182, 212, 0.3);">
+              <p style="color: var(--text); font-size: 14px; margin: 0;">${m.content}</p>
+            </div>
+          `;
+        } else {
+          return `
+            <div style="align-self: flex-start; max-width: 78%; background: linear-gradient(135deg,rgba(139,92,246,0.12),rgba(6,182,212,0.08)); padding: 16px 20px; border-radius: 16px 16px 16px 4px; border: 1px solid rgba(139,92,246,0.25);">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                <div style="width:24px;height:24px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;">🤖</div>
+                <span style="font-weight: 700; color: var(--purple); font-size:13px;">Ameyalli</span>
+              </div>
+              <div style="color: var(--text); font-size: 14px; line-height: 1.7;">${parseMarkdown(m.content)}</div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 100);
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function deleteSession(sessionId) {
+  if (!confirm('¿Eliminar esta conversación?')) return;
+
+  try {
+    await api(`/ai/sessions/${sessionId}`, { method: 'DELETE' });
+    toast('Conversación eliminada', 'success');
+    loadChatSessions();
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+function newChatSession() {
+  // Clear chat and start fresh (new session ID generated on next message)
+  const messages = document.getElementById('chatMessages');
+  if (messages) {
+    messages.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="width:72px;height:72px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 32px rgba(139,92,246,0.4);">🤖</div>
+        <h3 style="font-size:22px;font-weight:800;background:linear-gradient(135deg,white,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">Nueva sesión iniciada</h3>
+        <p style="color:var(--text-dim);font-size:14px;margin:0 auto;">Escribe tu primera pregunta.</p>
+      </div>
+    `;
+  }
+  toast('✨ Nueva sesión de chat iniciada', 'success');
+}
+
+// ═══ EXAMS ═══
+async function loadExams() {
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = `
+    <div class="card-3d">
+      <div class="card-header">
+        <div class="card-title">Exámenes</div>
+        <button class="btn btn-primary" onclick="toast('Próximamente', 'info')">
+          <span>➕</span>
+          <span>Nuevo</span>
+        </button>
+      </div>
+      <p style="color: var(--text-muted); text-align: center; padding: 60px;">Funcionalidad de exámenes próximamente</p>
+    </div>
+  `;
+}
+
+// ═══ SCAN ═══
+async function loadScan() {
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = `
+    <div class="card-3d">
+      <div class="card-header">
+        <div class="card-title">Escanear Examen</div>
+      </div>
+      <p style="color: var(--text-muted); text-align: center; padding: 60px;">Funcionalidad de escaneo próximamente</p>
+    </div>
+  `;
+}
+
+// ═══ SETTINGS ═══
+async function loadSettings() {
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = `
+    <div class="grid grid-2" style="max-width:900px;">
+      <div class="card-3d" style="border-top:2px solid var(--cyan);">
+        <div class="card-header">
+          <div class="card-title">👤 Perfil Docente</div>
+          <span class="card-badge badge-cyan">Editable</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre Completo</label>
+          <input type="text" class="form-input" id="settingName" value="${currentUser?.full_name || ''}" placeholder="Tu nombre completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" class="form-input" id="settingEmail" value="${currentUser?.email || ''}" disabled style="opacity:0.6;cursor:not-allowed;">
+          <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;">El correo no se puede cambiar</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Escuela / Institución</label>
+          <input type="text" class="form-input" id="settingSchool" value="${currentUser?.school || ''}" placeholder="Nombre de tu escuela">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Grado que impartes</label>
+          <input type="text" class="form-input" id="settingGrade" value="${currentUser?.grade || ''}" placeholder="Ej: 3° y 4° Primaria">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Grupo</label>
+          <input type="text" class="form-input" id="settingGroup" value="${currentUser?.group_name || ''}" placeholder="Ej: A, B, Mixto">
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <button class="btn btn-primary" style="flex:1;" onclick="saveProfile()">
+            <span>💾</span>
+            <span>Guardar Cambios</span>
+          </button>
+          <button class="btn btn-secondary" onclick="logout()">
+            <span>🚪</span>
+            <span>Salir</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card-3d" style="border-top:2px solid var(--purple);">
+        <div class="card-header">
+          <div class="card-title">🔑 Seguridad & Sistema</div>
+        </div>
+        <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--cyan);margin-bottom:8px;">Estado del Sistema</div>
+          <div style="display:grid;gap:8px;font-size:13px;color:var(--text-dim);font-family:var(--mono);">
+            <div>✅ Backend conectado · Puerto 3001</div>
+            <div>✅ Base de datos Turso · Activa</div>
+            <div>✅ Ameyalli IA · Claude 3.7 Sonnet</div>
+            <div id="ragStatusLine">⏳ RAG SEP · Verificando...</div>
+          </div>
+        </div>
+        <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--purple);margin-bottom:8px;">Mi Plan</div>
+          <div style="font-size:24px;font-weight:800;color:var(--text);">${currentUser?.plan || 'free'}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">IntelliExam v3 · Sistema de Gestión Docente</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Check RAG / AI status
+  try {
+    const ragEl = document.getElementById('ragStatusLine');
+    if (!ragEl) return;
+    const resp = await api('/ai/sessions');
+    ragEl.textContent = resp ? '✅ Ameyalli IA · Conectada y operativa' : '⚠️ IA · Sin respuesta';
+  } catch(e) {
+    const ragEl = document.getElementById('ragStatusLine');
+    if (ragEl) ragEl.textContent = '❌ IA · Error de conexión';
+  }
+}
+
+async function saveProfile() {
+  const full_name = document.getElementById('settingName').value.trim();
+  const school = document.getElementById('settingSchool').value.trim();
+  const grade = document.getElementById('settingGrade').value.trim();
+  const group_name = document.getElementById('settingGroup').value.trim();
+
+  if (!full_name) {
+    toast('El nombre es obligatorio', 'warning');
+    return;
+  }
+
+  try {
+    await api('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ full_name, school, grade, group_name })
+    });
+
+    // Update current user in memory
+    currentUser = { ...currentUser, full_name, school, grade, group_name };
+    document.getElementById('userName').textContent = full_name;
+    const initials = full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('userAvatar').textContent = initials;
+
+    toast('✅ Perfil actualizado correctamente', 'success');
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+  }
+}
+
+// ═══ INIT ═══
+async function init() {
+  const token = getToken();
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  try {
+    await loadUser();
+    await loadDashboard();
+
+    // Mostrar menú toggle en mobile
+    if (window.innerWidth <= 1024) {
+      document.getElementById('menuToggle').style.display = 'flex';
+    }
+  } catch (err) {
+    console.error('Init error:', err);
+    toast('Error de autenticación', 'error');
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 2000);
+  } finally {
+    setTimeout(() => {
+      document.getElementById('loading-screen').classList.add('hide');
+      setTimeout(() => {
+        document.getElementById('loading-screen').remove();
+      }, 500);
+    }, 1000);
+  }
+}
+
+// Responsive
+window.addEventListener('resize', () => {
+  const menuToggle = document.getElementById('menuToggle');
+  if (window.innerWidth <= 1024) {
+    menuToggle.style.display = 'flex';
+  } else {
+    menuToggle.style.display = 'none';
+    document.getElementById('sidebar').classList.remove('mobile-open');
+  }
+});
+
+// Close modal on outside click
+window.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal')) {
+    e.target.classList.remove('show');
+  }
+});
+
+// Start app
+init();
+</script>
+</body>
+</html>
