@@ -84,12 +84,13 @@ body {
 /* ── Ambient canvas ── */
 #ambient { position:fixed; inset:0; z-index:0; pointer-events:none; }
 
-/* ── Orbs ── */
+/* ── Orbs (Disabled on mobile for performance) ── */
 .orb {
   position: fixed; border-radius: 50%; pointer-events: none;
   filter: blur(120px); z-index:0;
   animation: float 18s ease-in-out infinite;
 }
+@media (max-width: 900px) { .orb { display:none !important; } #ambient { display:none !important; } }
 .o1 { width:600px; height:600px; background:radial-gradient(circle,rgba(var(--a2g),0.055),transparent 65%); top:-200px; left:-120px; }
 .o2 { width:450px; height:450px; background:radial-gradient(circle,rgba(var(--a3g),0.04),transparent 65%); bottom:-120px; right:-80px; animation-delay:-7s; }
 .o3 { width:300px; height:300px; background:radial-gradient(circle,rgba(var(--a1g),0.035),transparent 65%); top:40%; left:50%; animation-delay:-13s; }
@@ -164,6 +165,7 @@ body::before {
   display: flex; flex-direction: column;
   overflow: hidden;
 }
+@media (max-width: 900px) { .sb { backdrop-filter: none; background: #0a0a0a; } }
 
 /* Logo */
 .sb-logo {
@@ -454,6 +456,8 @@ body::before {
 
 /* ── AI Chat ── */
 .chat-wrap { display:flex; flex-direction:column; height:calc(100vh - 280px); }
+@media (max-width: 600px) { .chat-wrap { height:calc(100vh - 220px); } }
+
 .chat-quick { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
 .chat-qbtn {
   padding:6px 12px; border-radius:20px;
@@ -491,6 +495,7 @@ body::before {
 .chat-input-row {
   display:flex; gap:8px; padding-top:12px;
   border-top:1px solid var(--gb); margin-top:auto;
+  background: var(--bg); position: sticky; bottom: 0; padding-bottom: 10px;
 }
 .chat-in {
   flex:1; background:var(--bg3); border:1px solid var(--gb);
@@ -498,6 +503,7 @@ body::before {
   font-size:13px; font-family:var(--font); outline:none;
   transition:border-color .15s; backdrop-filter:blur(8px);
 }
+@media (max-width: 600px) { .chat-in { backdrop-filter: none; background: #161616; } }
 .chat-in:focus { border-color:rgba(var(--a2g),.35); }
 .chat-in::placeholder { color:var(--tx3); }
 
@@ -1338,6 +1344,7 @@ function initPts() { PTS=[]; for(let i=0;i<N;i++) PTS.push(new Pt()); }
 initPts();
 
 function tick() {
+  if (window.innerWidth <= 900) return; // Disable canvas animation on mobile
   CX.clearRect(0,0,W,H);
   PTS.forEach((p,i) => {
     p.mv(); p.dr();
