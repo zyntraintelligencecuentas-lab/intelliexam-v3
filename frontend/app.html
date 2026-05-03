@@ -615,6 +615,95 @@ body::before {
 @keyframes dot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-5px);opacity:1} }
 .proc-text { font-family:var(--mono); font-size:11px; color:var(--a2); }
 
+/* ── Chat Layout & History ── */
+.chat-main-container {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.chat-history-sidebar {
+  width: 240px;
+  background: rgba(16,16,18,0.4);
+  border: 1px solid var(--gb);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+  overflow: hidden;
+  z-index: 10;
+}
+@media (max-width: 900px) {
+  .chat-history-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(10,10,12,0.98);
+    backdrop-filter: blur(20px);
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+  }
+  .chat-history-sidebar.open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+.chat-history-head {
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx3);
+  border-bottom: 1px solid var(--gb);
+}
+.chat-history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.chat-session-item {
+  padding: 10px 12px;
+  border-radius: var(--rs);
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.chat-session-item:hover {
+  background: rgba(var(--a2g), 0.05);
+  border-color: rgba(var(--a2g), 0.1);
+}
+.chat-session-item.active {
+  background: rgba(var(--a2g), 0.08);
+  border-color: rgba(var(--a2g), 0.2);
+}
+.chat-session-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--tx2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.chat-session-meta {
+  font-size: 10px;
+  color: var(--tx3);
+  font-family: var(--mono);
+}
+.chat-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* ── Radar / stat blocks ── */
 .stat-block {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -1252,7 +1341,7 @@ body::before {
         <div class="card-head"><div class="card-title">Reportes generados</div><div class="card-tag tag-blue">Últimos 30 días</div></div>
         <table class="tbl">
           <thead><tr><th>Reporte</th><th>Tipo</th><th>Fecha</th><th>Destinatario</th><th></th></tr></thead>
-          <tbody>
+          <tbody id="tbody-r">
             <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--tx3)">Sin reportes generados aún</td></tr>
           </tbody>
         </table>
@@ -1280,9 +1369,19 @@ body::before {
           <div class="ameyalli-sub" id="ai-status-label">Tu asistente docente · IntelliExam AI</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px">
-          <button class="btn" style="font-size:11px" onclick="newChat()">+ Nuevo chat</button>
+          <button class="btn" style="font-size:11px" onclick="newChat()">+ Nuevo</button>
+          <button class="btn" style="font-size:11px;background:var(--g2);border-color:var(--gb)" onclick="toggleChatHistory()">Historial</button>
         </div>
       </div>
+
+      <div class="chat-main-container">
+        <!-- Sidebar de Historial -->
+        <div class="chat-history-sidebar" id="chat-history-sidebar">
+          <div class="chat-history-head">Historial de Chats</div>
+          <div class="chat-history-list" id="chat-history-list">
+            <div style="padding:20px;text-align:center;font-size:11px;color:var(--tx3)">Cargando historial...</div>
+          </div>
+        </div>
 
       <div class="chat-wrap">
         <div class="chat-quick">
@@ -1699,6 +1798,7 @@ async function init() {
   try {
     await loadDashboard();
     await loadUserUI();
+    renderChatList(); // Cargar historial de chat al inicio
   } catch (err) {
     console.error('[BOOT]', err);
     toast('Error conectando al servidor', 'err');
@@ -1734,6 +1834,8 @@ async function loadDashboard() {
 
   renderTopList();
   renderStudents();
+  renderExams();
+  renderReports();
   
   const badgeS = document.getElementById('badge-s');
   if (badgeS) badgeS.textContent = data.students.length;
@@ -1838,7 +1940,7 @@ async function renderExams() {
 }
 
 async function renderReports() {
-  const tb = document.querySelector('#pg-reports tbody');
+  const tb = document.getElementById('tbody-r');
   if(!tb) return;
   try {
     const reports = await api('/reports');
@@ -2191,7 +2293,6 @@ async function sendMsg() {
         context: {
           teacherName: (getUser()?.full_name || 'Docente'),
           students:  window.IE_STUDENTS || [],
-          sessionId: activeSessionId,
         },
       }),
     });
@@ -2199,14 +2300,17 @@ async function sendMsg() {
     document.getElementById('typing')?.remove();
 
     if (res) {
+      const isNew = !activeSessionId;
       activeSessionId = res.session_id;
       chatApiHistory.push({ role: 'assistant', content: res.content });
 
       appendMsg('ai', res.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'));
+      
+      if (isNew) renderChatList(); // Recargar lista si es chat nuevo
     }
   } catch (err) {
     document.getElementById('typing')?.remove();
-    appendMsg('ai', 'Ameyalli no está disponible en este momento. Verifica que el backend esté corriendo.');
+    appendMsg('ai', 'Ameyalli no está disponible en este momento. Verifica tu conexión.');
     toast('Error conectando con Ameyalli', 'err');
   }
 }
@@ -2219,10 +2323,56 @@ function qmsg(text) {
 async function newChat() {
   activeSessionId   = null;
   chatApiHistory    = [];
-
-  const box = document.getElementById('chat-msgs');
-  box.innerHTML = '';
+  document.getElementById('chat-msgs').innerHTML = '';
   appendMsg('ai', 'Hola, soy <strong>Ameyalli</strong>. Nueva conversación iniciada. ¿En qué te ayudo hoy?');
+  toast('Nuevo chat iniciado', 'ok');
+  renderChatList();
+}
+
+async function renderChatList() {
+  const el = document.getElementById('chat-history-list');
+  if (!el) return;
+  try {
+    const data = await api('/ai/sessions');
+    if (!data.sessions || data.sessions.length === 0) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;font-size:11px;color:var(--tx3)">No hay chats previos</div>';
+      return;
+    }
+    el.innerHTML = data.sessions.map(s => `
+      <div class="chat-session-item ${activeSessionId === s.id ? 'active' : ''}" onclick="loadChat('${s.id}')">
+        <div class="chat-session-title">${s.title || 'Chat sin título'}</div>
+        <div class="chat-session-meta">${new Date(s.created_at).toLocaleDateString()}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Error chat history:', err);
+  }
+}
+
+async function loadChat(sessionId) {
+  if (activeSessionId === sessionId) return;
+  toast('Cargando chat...', 'ok');
+  try {
+    const data = await api(`/ai/sessions/${sessionId}`);
+    activeSessionId = sessionId;
+    chatApiHistory = data.messages.map(m => ({ role: m.role, content: m.content }));
+    
+    const box = document.getElementById('chat-msgs');
+    box.innerHTML = '';
+    data.messages.forEach(m => appendMsg(m.role, m.content));
+    renderChatList(); // Update active state
+    if (window.innerWidth < 900) toggleChatHistory(); // Auto-cerrar en móvil
+  } catch (err) {
+    toast('Error al cargar la sesión', 'err');
+  }
+}
+
+function toggleChatHistory() {
+  const sb = document.getElementById('chat-history-sidebar');
+  if (sb) {
+    sb.classList.toggle('open');
+    if (sb.classList.contains('open')) renderChatList();
+  }
 }
 
 // consolidated functions above
