@@ -615,6 +615,7 @@ body::before {
 }
 .stat-big { font-size:30px; font-weight:700; letter-spacing:-1px; line-height:1; margin-bottom:5px; }
 
+/* ── RESPONSIVE ── */
 @media (max-width:900px) {
   .app { grid-template-columns:1fr; }
   .sb { 
@@ -622,14 +623,18 @@ body::before {
     position: fixed;
     top: 0;
     left: 0;
+    width: 280px;
     height: 100vh;
-    width: 260px;
+    height: 100dvh;
     z-index: 2000;
     background: #0a0a0a;
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-    animation: slideRight 0.3s ease;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.22,1,.36,1);
+    display: flex !important; /* Always flex but hidden by transform */
   }
-  .sb.open { display: flex !important; }
+  .sb.open { transform: translateX(0); }
+  
   .sidebar-overlay {
     display: none;
     position: fixed;
@@ -639,10 +644,16 @@ body::before {
     z-index: 1999;
   }
   .sidebar-overlay.open { display: block; }
-  @keyframes slideRight {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+
+  .mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  
+  .topbar {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 16px !important;
   }
+  .mob-menu-btn { display: block !important; cursor: pointer; }
   .bento-4 { grid-template-columns:1fr 1fr; }
   .bento-32,.bento-23 { grid-template-columns:1fr; }
   .bento-3 { grid-template-columns:1fr; }
@@ -769,6 +780,7 @@ body::before {
     <!-- ─── DASHBOARD ─── -->
     <div id="pg-dashboard" class="page on">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Ciclo 2025–2026 · Grupo 3°A</div>
           <div class="page-title">Panel de Control</div>
@@ -875,6 +887,7 @@ body::before {
     <!-- ─── ALUMNOS ─── -->
     <div id="pg-students" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Gestión de grupo · <span id="ui-group-name">Grupo</span></div>
           <div class="page-title">Alumnos</div>
@@ -928,6 +941,7 @@ body::before {
     <!-- ─── EXÁMENES ─── -->
     <div id="pg-exams" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Historial completo</div>
           <div class="page-title">Exámenes</div>
@@ -954,6 +968,7 @@ body::before {
     <!-- ─── ESCANEAR ─── -->
     <div id="pg-scan" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">OCR + IA · Procesamiento automático</div>
           <div class="page-title">Escanear Examen</div>
@@ -1016,6 +1031,7 @@ body::before {
     <!-- ─── REPORTES ─── -->
     <div id="pg-reports" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Generación automática · PDF</div>
           <div class="page-title">Reportes</div>
@@ -1068,6 +1084,7 @@ body::before {
     <!-- ─── AMEYALLI IA ─── -->
     <div id="pg-ai" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Motor IA · Análisis pedagógico</div>
           <div class="page-title">Ameyalli IA</div>
@@ -1137,6 +1154,7 @@ body::before {
     <!-- ─── ANALÍTICA ─── -->
     <div id="pg-analytics" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Motor IA · Análisis profundo</div>
           <div class="page-title">Analítica Avanzada</div>
@@ -1164,6 +1182,7 @@ body::before {
 
     <div id="pg-planning" class="page">
       <div class="topbar">
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
         <div>
           <div class="eyebrow">Motor IA · Planeación Maestra NEM 2022</div>
           <div class="page-title">Planeación Didáctica</div>
@@ -1398,6 +1417,17 @@ function tick() {
 }
 tick();
 
+// Visual Viewport Fix for Mobile Keyboard
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    if (window.innerWidth > 900) return;
+    const chatWrap = document.querySelector('.chat-wrap');
+    if (!chatWrap) return;
+    const vh = window.visualViewport.height;
+    chatWrap.style.height = `${vh - 200}px`;
+  });
+}
+
 /* ── Data ── */
 /* ═══════════════════════════════════════
    CONFIG — Producción/Desarrollo
@@ -1556,6 +1586,13 @@ async function loadUserUI() {
 
 /* ── Navigation ── */
 function go(name) {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  if (window.innerWidth <= 900) {
+    sb.classList.remove('open');
+    ov.classList.remove('open');
+  }
+  
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   document.getElementById('pg-'+name).classList.add('on');
