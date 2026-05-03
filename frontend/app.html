@@ -655,11 +655,24 @@ body::before {
     gap: 12px !important;
     padding: 10px 16px !important;
   }
-  .mob-menu-btn { display: block !important; cursor: pointer; }
+  .mob-menu-btn { display: block !important; cursor: pointer; z-index: 1100; }
   .bento-4 { grid-template-columns:1fr 1fr; }
   .bento-32,.bento-23 { grid-template-columns:1fr; }
   .bento-3 { grid-template-columns:1fr; }
   .span2,.span3 { grid-column:span 1; }
+
+  /* Chat Mobile Fix Android Poco */
+  #pg-ai.on { display: flex !important; flex-direction: column; height: calc(100dvh - 60px); overflow: hidden; }
+  .chat-wrap { flex: 1; display: flex; flex-direction: column; height: auto !important; overflow: hidden; }
+  .chat-msgs { flex: 1; overflow-y: auto; padding-bottom: 85px; }
+  .chat-input-row { 
+    position: fixed !important; bottom: 0 !important; left: 0 !important; width: 100% !important; 
+    background: #050912 !important; padding: 12px 10px env(safe-area-inset-bottom) !important;
+    z-index: 1000 !important; border-top: 1px solid var(--gb) !important;
+    display: flex !important; gap: 8px !important;
+  }
+  .btn-send-text { display: none !important; }
+  .btn-send-icon { display: flex !important; width: 50px !important; height: 50px !important; border-radius: 50% !important; justify-content: center; align-items:center; flex-shrink: 0; }
 }
 @media (max-width:600px) {
   .bento-4 { grid-template-columns:1fr 1fr; }
