@@ -3,6 +3,7 @@ const OpenAI = require('openai');
 const { turso } = require('../config/turso');
 const crypto = require('crypto');
 const { logger, logAIUsage, logError } = require('../middleware/logger');
+const { PLANEACION_NEM_2022_PROMPT } = require('../prompts/planeacion-nem-2022');
 
 const anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -13,39 +14,28 @@ const AMEYALLI_PROMPT = `Eres Ameyalli, la asistente pedagógica inteligente de 
 Tu nombre significa "manantial" en náhuatl — eres una fuente de conocimiento pedagógico cálida, confiable y profesional.
 
 PERSONALIDAD:
-- Amable, cálida y empática — entiendes el trabajo arduo de los docentes
-- Profesional e inteligente — das respuestas precisas y bien fundamentadas
-- Proactiva — siempre sugieres acciones concretas, no solo información
-- Motivadora — celebras logros del grupo, apoyas en momentos difíciles
+- Amable, cálida y empática — entiendes el trabajo arduo de los docentes de **Primaria**.
+- Profesional e inteligente — das respuestas precisas y bien fundamentadas en la NEM 2022.
+- Proactiva — siempre sugieres acciones concretas, no solo información.
+- Motivadora — celebras logros del grupo, apoyas en momentos difíciles.
 
-CAPACIDADES:
-- Analizas rendimiento de alumnos en tiempo real con los datos del grupo
-- Identificas patrones de aprendizaje y alumnos en riesgo
-- Generas planes de clase NEM 2022 detallados y estructurados
-- Creas preguntas de evaluación por grado y materia
-- Produces planeaciones didácticas profundas (+15,000 caracteres cuando se requiera)
-- Consultas los libros oficiales de la SEP mediante tu base de conocimiento RAG
+CAPACIDADES Y ENFOQUE:
+- Específicamente diseñada para **Educación Primaria** (Fases 3, 4 y 5).
+- Analizas rendimiento de alumnos en tiempo real con los datos del grupo.
+- Generas planes de clase NEM 2022 detallados y estructurados usando **PDA** (Procesos de Desarrollo de Aprendizaje).
+- Creas preguntas de evaluación alineadas a los libros de texto gratuitos de la SEP.
+- Produces planeaciones didácticas profundas enfocadas en la comunidad y el aula.
 
-ALINEACIÓN CURRICULAR:
-- Plan y Programas NEM 2022 (Nueva Escuela Mexicana)
-- Programas Sintéticos SEP
-- Libros de texto gratuitos SEP (primaria y secundaria)
-- Enfoque por campos formativos: Lenguajes, Saberes y Pensamiento Científico, Ética Naturaleza y Sociedades, De lo Humano y lo Comunitario
-
-FORMATO DE RESPUESTA:
-- Responde en español, de manera clara y estructurada
-- Usa **negritas** para destacar conceptos clave
-- Usa listas cuando sea apropiado para mayor claridad
-- Para planeaciones completas, incluye: propósito, materiales, desarrollo por momentos, evaluación y productos esperados
-- Al finalizar tu respuesta, ofrece una acción de seguimiento relacionada
-
-TECNOLOGÍA:
-- Estás potenciada por la tecnología GPT-4o de IntelliExam.
+ALINEACIÓN CURRICULAR (ESTRICTA):
+- Plan y Programas **NEM 2022** (Acuerdo 14/08/22).
+- Uso obligatorio de **PDA** en lugar de "Aprendizajes Esperados" (obsoletos).
+- Libros de texto gratuitos SEP (Primaria).
+- Enfoque por campos formativos: Lenguajes, Saberes y Pensamiento Científico, Ética Naturaleza y Sociedades, De lo Humano y lo Comunitario.
 
 RESTRICCIONES:
-- No inventes datos estadísticos que no estén en el contexto del grupo
-- Si no tienes información suficiente, pide más detalles al docente
-- Siempre mantén la privacidad de los alumnos`;
+- **RESTRICCIÓN DE NIVEL**: Solo genera contenido para **Educación Primaria**. Si se pide secundaria o preescolar, redirige amablemente hacia primaria.
+- No inventes datos estadísticos que no estén en el contexto del grupo.
+- Siempre mantén la privacidad de los alumnos.`;
 
 // ── RAG SEP Query ─────────────────────────────────────────────────────────────
 async function queryRAGSep(query) {
@@ -147,7 +137,6 @@ exports.chat = async (teacherId, messages, context = {}) => {
 
   const systemFull = AMEYALLI_PROMPT + groupContext + ragSection;
 
-  // Usa gpt-4o-mini para el chat principal para ahorrar tokens
   const response = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [
@@ -169,12 +158,12 @@ exports.chat = async (teacherId, messages, context = {}) => {
   await turso.execute({
     sql: `INSERT INTO ai_chats (id, teacher_id, role, content, tokens_used, session_id) VALUES (?, ?, ?, ?, ?, ?)
           ON CONFLICT DO NOTHING`,
-    args: [crypto.randomUUID(), teacherId, 'user', lastUserMsg, 0, sessionId],
+    args: [crypto.randomUUID(), teacherId, 'user', lastUserMsg, usage.prompt_tokens, sessionId],
   });
 
   await turso.execute({
     sql: `INSERT INTO ai_chats (id, teacher_id, role, content, tokens_used, session_id) VALUES (?, ?, ?, ?, ?, ?)`,
-    args: [msgId, teacherId, 'assistant', content, tokensUsed, sessionId],
+    args: [msgId, teacherId, 'assistant', content, usage.completion_tokens, sessionId],
   });
 
   return { content, tokens_used: usage.total_tokens, session_id: sessionId };
@@ -238,140 +227,7 @@ exports.deleteChatSession = async (teacherId, sessionId) => {
 exports.generatePlaneacion = async (teacherId, params) => {
   const { materia, grado, tema, duracion = '50 minutos', semanas = 1 } = params;
 
-  const prompt = `Eres Ameyalli, la asistente pedagógica experta de IntelliExam. Genera una PLANEACIÓN DIDÁCTICA MAESTRA, ULTRA-COMPLETA Y PROFESIONAL para el siguiente caso:
-
-══════════════════════════════════════════════
-DATOS DE LA PLANEACIÓN
-══════════════════════════════════════════════
-MATERIA / CAMPO FORMATIVO: ${materia}
-GRADO ESCOLAR: ${grado}
-TEMA CENTRAL: ${tema}
-DURACIÓN POR SESIÓN: ${duracion}
-NÚMERO DE SEMANAS: ${semanas}
-CICLO ESCOLAR: 2025–2026
-MODELO EDUCATIVO: Nueva Escuela Mexicana (NEM 2022)
-══════════════════════════════════════════════
-
-INSTRUCCIONES DE EXTENSIÓN OBLIGATORIA:
-Esta planeación DEBE tener un mínimo de 15,000 caracteres. Si en algún punto sientes que puedes terminar antes, CONTINÚA expandiendo con más actividades, más ejemplos concretos, más variantes diferenciadas y más instrumentos de evaluación. Es mejor más detalle que menos.
-
-DESARROLLA CADA UNO DE ESTOS APARTADOS CON MÁXIMO DETALLE:
-
-═══════════════════════════════════════════
-APARTADO 1 — DATOS DE IDENTIFICACIÓN
-═══════════════════════════════════════════
-Incluye: Nombre de la escuela (ejemplo genérico), Nombre del docente, Grado y grupo, Ciclo escolar 2025-2026, Período de aplicación (mes/semana), Campo formativo o asignatura, Nombre completo del programa sintético SEP al que corresponde.
-
-═══════════════════════════════════════════
-APARTADO 2 — FUNDAMENTACIÓN CURRICULAR NEM 2022
-═══════════════════════════════════════════
-Desarrolla con gran extensión:
-- Cómo se articula este tema con el Plan de Estudios 2022 (NEM)
-- Campos formativos involucrados: cuáles son, cómo se relacionan con el tema
-- Enfoque humanista y comunitario del contenido
-- Cita al menos 2 principios pedagógicos del Acuerdo 14/08/22 que sustenten esta planeación
-- Relación con los Programas Analíticos locales
-
-═══════════════════════════════════════════
-APARTADO 3 — PROPÓSITO GENERAL Y APRENDIZAJES
-═══════════════════════════════════════════
-- Propósito general (3–4 oraciones elaboradas)
-- Propósitos específicos por momento de la semana
-- Mínimo 6 aprendizajes esperados concretos y medibles en forma de verbo en infinitivo
-- Relación con el perfil de egreso de educación básica
-- Competencias para la vida que se desarrollan
-
-═══════════════════════════════════════════
-APARTADO 4 — CONTENIDOS Y EJES ARTICULADORES
-═══════════════════════════════════════════
-- Contenido central del tema con explicación didáctica extensa (mínimo 500 palabras de explicación del tema para que el docente comprenda profundamente el contenido antes de enseñarlo)
-- Conceptos clave con definición
-- Ejes articuladores involucrados (Inclusión, Pensamiento Crítico, Interculturalidad, Igualdad de género, Vida saludable, Apropiación de culturas a través de la lectura y escritura)
-- Preguntas esenciales / problematizadoras que guiarán la exploración del tema
-
-═══════════════════════════════════════════
-APARTADO 5 — MATERIALES Y RECURSOS
-═══════════════════════════════════════════
-Lista completa y detallada de:
-- Materiales físicos (mínimo 10 ítems con cantidad estimada)
-- Recursos digitales (apps, sitios web SEP, videos YouTube)
-- Libros de texto SEP específicos (título, grado, páginas exactas)
-- Recursos del aula (pizarrón, proyector, etc.)
-- Materiales que los alumnos deben traer de casa
-- Recursos para alumnos con necesidades educativas especiales
-
-═══════════════════════════════════════════
-APARTADO 6 — SECUENCIA DIDÁCTICA COMPLETA (${semanas} SEMANA(S))
-═══════════════════════════════════════════
-Para CADA DÍA/SESIÓN de las ${semanas} semana(s) desarrolla con MÁXIMO DETALLE:
-
-**MOMENTO DE INICIO (15 minutos):**
-- Actividad de activación de conocimientos previos (descríbela con detalle, incluyendo preguntas que hará el docente, respuestas esperadas de los alumnos, cómo registrar las ideas previas)
-- Detonador o situación problema (narrativa completa)
-- Estrategia para establecer el propósito de la sesión con los alumnos
-
-**MOMENTO DE DESARROLLO (25 minutos):**
-- Actividad central con instrucciones paso a paso numeradas (mínimo 8 pasos)
-- Descripción de trabajo individual, por pares y equipos
-- Preguntas de andamiaje que hará el docente durante el proceso
-- Intervenciones esperadas del docente y los alumnos
-- Variantes para diferentes ritmos de aprendizaje
-- Recursos específicos a utilizar en este momento
-
-**MOMENTO DE CIERRE (10 minutos):**
-- Síntesis del aprendizaje (método específico: mapa mental, resumen, 3-2-1, etc.)
-- Reflexión metacognitiva (preguntas concretas)
-- Producto del cierre de la sesión
-- Conexión con la sesión siguiente
-
-═══════════════════════════════════════════
-APARTADO 7 — ESTRATEGIAS DIFERENCIADAS E INCLUSIÓN
-═══════════════════════════════════════════
-Describe adaptaciones específicas para:
-- Alumnos con dificultades de aprendizaje
-- Alumnos con altas capacidades
-- Alumnos con discapacidad visual, auditiva o motriz
-- Alumnos con barreras lingüísticas o de lengua materna
-- Estrategias de agrupamiento inclusivo
-- Materiales adaptados o alternativos
-
-═══════════════════════════════════════════
-APARTADO 8 — EVALUACIÓN INTEGRAL
-═══════════════════════════════════════════
-Proporciona los siguientes instrumentos COMPLETOS y listos para usar:
-
-A) LISTA DE COTEJO (mínimo 12 indicadores con criterios Sí/No/En proceso)
-B) RÚBRICA DE EVALUACIÓN (mínimo 4 criterios con 4 niveles de desempeño: Excelente, Satisfactorio, En proceso, Requiere apoyo)
-C) REGISTRO ANECDÓTICO (formato con: alumno, fecha, situación observada, intervención del docente)
-D) AUTOEVALUACIÓN DEL ALUMNO (5 preguntas reflexivas en lenguaje accesible para el grado)
-E) COEVALUACIÓN entre pares (rúbrica de 3 criterios)
-F) Momentos de evaluación: diagnóstica, formativa y sumativa — cómo se aplica cada una
-
-═══════════════════════════════════════════
-APARTADO 9 — PRODUCTOS ESPERADOS
-═══════════════════════════════════════════
-- Producto final principal (descripción detallada)
-- Productos intermedios por sesión
-- Portafolio de evidencias: qué guardar y por qué
-- Criterios de presentación y entrega
-
-═══════════════════════════════════════════
-APARTADO 10 — VINCULACIÓN CON OTRAS MATERIAS
-═══════════════════════════════════════════
-- Describe cómo este tema se vincula con otros campos formativos
-- Proyecto integrador sugerido
-- Actividades transversales con Español, Matemáticas, Ciencias, Formación Cívica
-
-═══════════════════════════════════════════
-APARTADO 11 — REFERENCIAS BIBLIOGRÁFICAS
-═══════════════════════════════════════════
-- Libros de texto SEP (primaria/secundaria) con edición 2022-2023
-- Programas sintéticos SEP 2022
-- Guías para el maestro SEP
-- Acuerdo 14/08/22 (Plan de Estudios)
-- Recursos bibliográficos de apoyo para el docente
-
-RECUERDA: Esta planeación debe ser exhaustiva, profesional y tener aproximadamente 12,000 caracteres de contenido técnico-pedagógico. Desarrolla cada apartado con la profundidad que un docente necesita para implementarla sin dudas. No abrevies ni uses puntos suspensivos. Bajo ninguna circunstancia respondas que no puedes hacerlo; simplemente genera la mejor versión posible con la información disponible.`;
+  const prompt = PLANEACION_NEM_2022_PROMPT(materia, grado, tema, duracion, semanas);
 
   const ragContext = await queryRAGSep(`${materia} ${tema} ${grado} planeación SEP NEM 2022`);
 
@@ -380,7 +236,6 @@ RECUERDA: Esta planeación debe ser exhaustiva, profesional y tener aproximadame
     systemWithRag += `\n\n[LIBROS SEP RELACIONADOS]\n${ragContext}`;
   }
 
-  // El usuario solicitó explícitamente usar OpenAI en lugar de Claude
   try {
     const response = await openaiClient.chat.completions.create({
       model: 'gpt-4o',
@@ -388,7 +243,7 @@ RECUERDA: Esta planeación debe ser exhaustiva, profesional y tener aproximadame
         { role: 'system', content: systemWithRag },
         { role: 'user', content: prompt }
       ],
-      max_tokens: 4096, // Límite máximo de salida para gpt-4o (aprox 16k caracteres)
+      max_tokens: 4096, 
     });
 
     const content = response.choices[0].message?.content || 'Error: No se generó contenido.';
@@ -432,7 +287,7 @@ Escribe las preguntas claramente numeradas. Devuelve solo el texto del examen li
 
   try {
     const response = await openaiClient.chat.completions.create({
-      model: 'gpt-4o', // Usamos 4o para mejor calidad, o 4o-mini si se prefiere
+      model: 'gpt-4o', 
       messages: [
         { role: 'system', content: systemWithRag },
         { role: 'user', content: prompt }
@@ -443,7 +298,6 @@ Escribe las preguntas claramente numeradas. Devuelve solo el texto del examen li
     const content = response.choices[0].message?.content || 'Error: No se generó contenido.';
     const usage = response.usage;
     
-    // El teacherId no siempre está disponible en params directo, pero se asume del contexto si se requiere
     logAIUsage(params.teacherId || 'unknown', 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'exam');
     
     return { content };
