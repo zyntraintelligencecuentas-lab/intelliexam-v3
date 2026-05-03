@@ -627,11 +627,13 @@ body::before {
     height: 100vh;
     height: 100dvh;
     z-index: 2000;
-    background: #0a0a0a;
-    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    background: #0f0f0f; /* Solid color for better performance on Android */
+    backdrop-filter: none !important; /* No blur */
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.8);
     transform: translateX(-100%);
-    transition: transform .25s cubic-bezier(.22,1,.36,1);
-    display: flex !important; /* Always flex but hidden by transform */
+    transition: transform .2s cubic-bezier(.22,1,.36,1);
+    display: flex !important;
   }
   .sb.open { transform: translateX(0); }
   
@@ -780,7 +782,7 @@ body::before {
     <!-- ─── DASHBOARD ─── -->
     <div id="pg-dashboard" class="page on">
       <div class="topbar">
-        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:block;background:none;border:none;color:#fff;font-size:24px;padding:8px 12px;margin-right:10px;line-height:1">☰</button>
         <div>
           <div class="eyebrow">Ciclo 2025–2026 · Grupo 3°A</div>
           <div class="page-title">Panel de Control</div>
@@ -887,7 +889,7 @@ body::before {
     <!-- ─── ALUMNOS ─── -->
     <div id="pg-students" class="page">
       <div class="topbar">
-        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:block;background:none;border:none;color:#fff;font-size:24px;padding:8px 12px;margin-right:10px;line-height:1">☰</button>
         <div>
           <div class="eyebrow">Gestión de grupo · <span id="ui-group-name">Grupo</span></div>
           <div class="page-title">Alumnos</div>
@@ -941,7 +943,7 @@ body::before {
     <!-- ─── EXÁMENES ─── -->
     <div id="pg-exams" class="page">
       <div class="topbar">
-        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:block;background:none;border:none;color:#fff;font-size:24px;padding:8px 12px;margin-right:10px;line-height:1">☰</button>
         <div>
           <div class="eyebrow">Historial completo</div>
           <div class="page-title">Exámenes</div>
@@ -968,7 +970,7 @@ body::before {
     <!-- ─── ESCANEAR ─── -->
     <div id="pg-scan" class="page">
       <div class="topbar">
-        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:block;background:none;border:none;color:#fff;font-size:24px;padding:8px 12px;margin-right:10px;line-height:1">☰</button>
         <div>
           <div class="eyebrow">OCR + IA · Procesamiento automático</div>
           <div class="page-title">Escanear Examen</div>
@@ -1031,7 +1033,7 @@ body::before {
     <!-- ─── REPORTES ─── -->
     <div id="pg-reports" class="page">
       <div class="topbar">
-        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:block;background:none;border:none;color:#fff;font-size:24px;padding:8px 12px;margin-right:10px;line-height:1">☰</button>
         <div>
           <div class="eyebrow">Generación automática · PDF</div>
           <div class="page-title">Reportes</div>
@@ -1084,7 +1086,7 @@ body::before {
     <!-- ─── AMEYALLI IA ─── -->
     <div id="pg-ai" class="page">
       <div class="topbar">
-        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#fff;font-size:20px;padding:0;margin-right:10px">☰</button>
+        <button class="mob-menu-btn" onclick="toggleSidebar()" style="display:block;background:none;border:none;color:#fff;font-size:24px;padding:8px 12px;margin-right:10px;line-height:1">☰</button>
         <div>
           <div class="eyebrow">Motor IA · Análisis pedagógico</div>
           <div class="page-title">Ameyalli IA</div>
