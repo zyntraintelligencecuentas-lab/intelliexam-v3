@@ -668,6 +668,17 @@ body::before {
   .span2, .span3 { grid-column: span 1; }
   .mob-btn { display: flex; }
   
+  /* ── Tablet-específico (768–900px) ── */
+  .app { grid-template-columns: 200px 1fr !important; } /* sidebar visible pero angosto */
+  .tab { padding: 20px 22px; }
+  .nav-item { font-size: 12px; padding: 7px 9px; }
+  .logo-name { font-size: 15px; }
+  .page-title { font-size: 20px; }
+  .kpi { padding: 14px; }
+  .kpi-val { font-size: 26px !important; }
+  .card { padding: 16px; overflow-x: auto; }
+  table { min-width: 520px; }
+
   /* Sidebar: drawer desde la izquierda */
   .sb {
     position: fixed !important;
@@ -693,7 +704,11 @@ body::before {
     grid-column: 1 / -1 !important;
     height: 100vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
   }
+
+  .ai-chat { height: calc(100vh - 160px); }
 }
 
 /* ── Mobile (≤640px) ── */
@@ -820,6 +835,21 @@ body::before {
     transition-duration: .01ms !important;
   }
 }
+
+/* ── Performance optimizations ── */
+.orb          { will-change: transform; }
+.kpi::before  { will-change: left; }
+.nav-item     { will-change: background-color; }
+.card         { will-change: border-color; }
+.sb           { will-change: transform; }
+
+/* Reducir animaciones en tabs no activos */
+.page:not(.on) .orb,
+.page:not(.on) .kpi::before { animation-play-state: paused; }
+
+/* GPU layers para elementos de scroll */
+.chat-msgs    { transform: translateZ(0); }
+
 </style>
 </head>
 <body>
@@ -1105,8 +1135,10 @@ body::before {
           <div class="card-title">Exámenes procesados · <span id="exams-total-label" style="font-family:var(--mono);color:var(--a2);font-size:11.5px">0 total</span></div>
         </div>
         <table class="tbl">
-          <thead><tr><th>Examen</th><th>Materia</th><th>Grupo</th><th>Fecha</th><th>Alumnos</th><th>Promedio</th><th>Estado</th></tr></thead>
+          <thead><tr><th>Examen</th><th>Materia</th><th>Grupo</th><th>Fecha</th><th>Alumnos</th><th>Promedio</th><th style="text-align:right">Acciones</th></tr></thead>
+          <tbody id="tbody-e">
             <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--tx3)">Cargando exámenes...</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -1542,11 +1574,21 @@ class Pt {
   }
 }
 
-function initPts() { PTS=[]; for(let i=0;i<N;i++) PTS.push(new Pt()); }
+function initPts() { 
+  const currentN = (window.innerWidth <= 640) ? 20 : N;
+  PTS=[]; 
+  for(let i=0;i<currentN;i++) PTS.push(new Pt()); 
+}
 initPts();
 
+let isVisible = true;
+document.addEventListener('visibilitychange', () => { isVisible = !document.hidden; });
+
 function tick() {
-  if (window.innerWidth <= 900) return; // Disable canvas animation on mobile
+  if (window.innerWidth <= 900 || !isVisible) {
+    requestAnimationFrame(tick);
+    return;
+  }
   CX.clearRect(0,0,W,H);
   PTS.forEach((p,i) => {
     p.mv(); p.dr();
@@ -1664,7 +1706,12 @@ async function init() {
 }
 
 async function loadDashboard() {
-  const data = await api('/dashboard');
+  // Paralelizar peticiones para mejorar rendimiento
+  const [data, recentExams] = await Promise.all([
+    api('/dashboard'),
+    api('/dashboard/recent-exams')
+  ]);
+
   if (!data) return;
 
   const elExams = document.getElementById('kpi-exams');
@@ -1680,14 +1727,14 @@ async function loadDashboard() {
   animateCounters();
 
   window.IE_STUDENTS = data.students;
-  window.IE_EXAMS    = data.exams;
+  window.IE_EXAMS    = recentExams;
   window.IE_PROFILE  = data.profile;
   G_STUDENTS = data.students;
-  G_EXAMS = data.exams;
+  G_EXAMS = recentExams;
 
   renderTopList();
   renderStudents();
-  // initCharts(data.exams, data.students); // charts remain static for now to avoid errors unless updated
+  
   const badgeS = document.getElementById('badge-s');
   if (badgeS) badgeS.textContent = data.students.length;
 }
@@ -1765,7 +1812,7 @@ async function renderExams() {
   const tb = document.getElementById('tbody-e');
   if(!tb) return;
   try {
-    const exams = await api('/dashboard/recent-exams');
+    const exams = G_EXAMS.length > 0 ? G_EXAMS : await api('/dashboard/recent-exams');
     tb.innerHTML = exams.map(e=>`
       <tr>
         <td style="color:var(--tx)">${e.title}</td>
@@ -1774,14 +1821,19 @@ async function renderExams() {
         <td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${new Date(e.created_at).toLocaleDateString('es-MX', {day:'2-digit', month:'short'})}</td>
         <td style="font-family:var(--mono);font-size:11px">${e.student_count || 0}</td>
         <td><span class="badge ${e.average_score>=80?'bg':e.average_score>=70?'ba':'br'}">${Math.round(e.average_score || 0)}%</span></td>
-        <td><span class="badge bg">✓ Listo</span></td>
-        <td><button class="btn" style="font-size:10.5px;padding:4px 9px" onclick="viewExam('${e.id}')">Ver</button></td>
+        <td style="text-align:right">
+          <div style="display:flex;gap:4px;justify-content:flex-end">
+            <button class="btn" style="font-size:10px;padding:3px 7px" onclick="downloadExamPDF('${e.id}')">PDF</button>
+            <button class="btn" style="font-size:10px;padding:3px 7px" onclick="downloadExamDOCX('${e.id}')">DOCX</button>
+          </div>
+        </td>
       </tr>
     `).join('');
-    document.getElementById('badge-e-total').textContent = exams.length + ' total';
+    const badgeTotal = document.getElementById('badge-e-total');
+    if (badgeTotal) badgeTotal.textContent = exams.length + ' total';
   } catch (err) {
     console.error(err);
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tx3)">No hay exámenes registrados</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tx3)">No hay exámenes registrados</td></tr>';
   }
 }
 
@@ -2099,6 +2151,16 @@ function appendMsg(role,text) {
 
 let chatApiHistory = []; // Mensajes actuales de la sesión para el backend
 let activeSessionId = null;
+
+async function downloadExamPDF(id) {
+  toast('Generando PDF profesional...', 'ok');
+  window.open(`${API}/exams/${id}/pdf?token=${getToken()}`, '_blank');
+}
+
+async function downloadExamDOCX(id) {
+  toast('Preparando documento Word...', 'ok');
+  window.location.href = `${API}/exams/${id}/docx?token=${getToken()}`;
+}
 
 async function sendMsg() {
   const inp = document.getElementById('chat-in');

@@ -2,6 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const OpenAI = require('openai');
 const { turso } = require('../config/turso');
 const crypto = require('crypto');
+const { logger, logAIUsage, logError } = require('../middleware/logger');
 
 const anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -52,7 +53,7 @@ async function queryRAGSep(query) {
   const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn('[RAG] Supabase no configurado — omitiendo contexto SEP');
+    logger.warn('RAG', 'Supabase no configurado — omitiendo contexto SEP');
     return null;
   }
 
@@ -60,7 +61,7 @@ async function queryRAGSep(query) {
     // Generar embedding del query con OpenAI
     const OPENAI_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_KEY) {
-      console.warn('[RAG] OpenAI API key no encontrada para embeddings');
+      logger.warn('RAG', 'OpenAI API key no encontrada para embeddings');
       return null;
     }
 
@@ -78,7 +79,7 @@ async function queryRAGSep(query) {
     });
 
     if (!embedRes.ok) {
-      console.warn('[RAG] Error generando embedding:', embedRes.status);
+      logger.warn('RAG', `Error generando embedding: ${embedRes.status}`);
       return null;
     }
 
@@ -102,19 +103,19 @@ async function queryRAGSep(query) {
     });
 
     if (!ragRes.ok) {
-      console.warn('[RAG] Error consultando Supabase:', ragRes.status);
+      logger.warn('RAG', `Error consultando Supabase: ${ragRes.status}`);
       return null;
     }
 
     const data = await ragRes.json();
     if (!Array.isArray(data)) {
-      console.warn('[RAG] La respuesta de Supabase no es un array:', data);
+      logger.warn('RAG', 'La respuesta de Supabase no es un array', { data });
       return null;
     }
-    console.log(`[RAG] Se encontraron ${data.length} fragmentos relevantes.`);
+    logger.info('RAG', `Se encontraron ${data.length} fragmentos relevantes.`);
     return data.map(d => d.content).join('\n\n');
   } catch (err) {
-    console.warn('[RAG] Error inesperado:', err.message);
+    logger.warn('RAG', `Error inesperado: ${err.message}`);
     return null;
   }
 }
@@ -157,9 +158,12 @@ exports.chat = async (teacherId, messages, context = {}) => {
   });
 
   const content      = response.choices[0].message.content;
-  const tokensUsed   = response.usage.total_tokens;
+  const usage        = response.usage;
   const msgId        = crypto.randomUUID();
   const sessionId    = context.sessionId || crypto.randomUUID();
+
+  // Log de uso de IA
+  logAIUsage(teacherId, 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'chat');
 
   // Persistir en Turso
   await turso.execute({
@@ -173,7 +177,7 @@ exports.chat = async (teacherId, messages, context = {}) => {
     args: [msgId, teacherId, 'assistant', content, tokensUsed, sessionId],
   });
 
-  return { content, tokens_used: tokensUsed, session_id: sessionId };
+  return { content, tokens_used: usage.total_tokens, session_id: sessionId };
 };
 
 // ── Historial de chats ────────────────────────────────────────────────────────
@@ -190,7 +194,7 @@ exports.getChatHistory = async (teacherId, limit = 50) => {
 
     return result.rows || [];
   } catch (err) {
-    console.error('[AI] getChatHistory error:', err.message);
+    logError('AI', err, { teacherId, category: 'history' });
     return [];
   }
 };
@@ -216,7 +220,7 @@ exports.listChatSessions = async (teacherId) => {
 
     return result.rows || [];
   } catch (err) {
-    console.error('[AI] listChatSessions error:', err.message);
+    logError('AI', err, { teacherId, category: 'sessions' });
     return [];
   }
 };
@@ -388,12 +392,12 @@ RECUERDA: Esta planeación debe ser exhaustiva, profesional y tener aproximadame
     });
 
     const content = response.choices[0].message?.content || 'Error: No se generó contenido.';
-    const tokensUsed = response.usage?.total_tokens || 0;
+    const usage = response.usage;
 
-    console.log('[AI] Generación exitosa. Tokens:', tokensUsed);
-    return { content, tokens_used: tokensUsed, materia, tema, grado };
+    logAIUsage(teacherId, 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'planeacion');
+    return { content, tokens_used: usage.total_tokens, materia, tema, grado };
   } catch (err) {
-    console.error('[AI Planeacion Error]:', err);
+    logError('AI', err, { teacherId, feature: 'planeacion', materia, tema });
     throw new Error('Error al generar planeación con OpenAI: ' + err.message);
   }
 };
@@ -437,9 +441,14 @@ Escribe las preguntas claramente numeradas. Devuelve solo el texto del examen li
     });
 
     const content = response.choices[0].message?.content || 'Error: No se generó contenido.';
+    const usage = response.usage;
+    
+    // El teacherId no siempre está disponible en params directo, pero se asume del contexto si se requiere
+    logAIUsage(params.teacherId || 'unknown', 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'exam');
+    
     return { content };
   } catch (err) {
-    console.error('[AI Exam Error]:', err);
+    logError('AI', err, { feature: 'exam', title, subject });
     throw new Error('Error al generar examen con OpenAI: ' + err.message);
   }
 };

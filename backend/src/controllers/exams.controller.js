@@ -1,5 +1,6 @@
 const { turso } = require('../config/turso');
 const crypto = require('crypto');
+const { logError } = require('../middleware/logger');
 
 exports.list = async (req, res, next) => {
   try {
@@ -25,10 +26,10 @@ exports.create = async (req, res, next) => {
     let ai_content = '';
     try {
       const aiService = require('../services/ai.service');
-      const aiRes = await aiService.generateExam({ title, subject, group_name, total_items, examType });
+      const aiRes = await aiService.generateExam({ title, subject, group_name, total_items, examType, teacherId: req.user.id });
       ai_content = aiRes.content;
     } catch (e) {
-      console.error('Error generando examen con IA:', e);
+      logError('EXAM', e, { teacherId: req.user.id, title, subject });
       ai_content = 'Error al generar el contenido con IA.';
     }
 

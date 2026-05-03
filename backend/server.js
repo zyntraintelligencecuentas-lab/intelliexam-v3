@@ -14,6 +14,7 @@ const aiRoutes = require('./src/routes/ai.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const errorHandler = require('./src/middleware/errorHandler');
 const { globalLimiter } = require('./src/middleware/rateLimiter');
+const { requestLogger, logger } = require('./src/middleware/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,7 +40,7 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(requestLogger);
 app.use(globalLimiter);
 
 const FRONTEND_PATH = path.isAbsolute(process.env.FRONTEND_PATH || '') 
@@ -74,12 +75,13 @@ app.get('*', (req, res) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log('\n══════════════════════════════════════');
-  console.log(`  IntelliExam Backend v3.0`);
-  console.log(`  http://localhost:${PORT}`);
-  console.log(`  Entorno: ${process.env.NODE_ENV}`);
-  console.log(`  Base de datos: TURSO`);
-  console.log('══════════════════════════════════════\n');
+  logger.info('SERVER', `IntelliExam backend iniciado`, {
+    port:    PORT,
+    env:     process.env.NODE_ENV || 'development',
+    turso:   process.env.TURSO_CONNECTION_URL ? 'conectado' : 'sin configurar',
+    claude:  process.env.ANTHROPIC_API_KEY ? 'configurado' : 'sin configurar',
+    version: '3.0.0',
+  });
 });
 
 module.exports = app;

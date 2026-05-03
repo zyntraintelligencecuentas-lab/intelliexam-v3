@@ -304,6 +304,292 @@ exports.generateExecutiveReport = async (teacherId) => {
   };
 };
 
+// ── Generar HTML de examen con formato profesional ──────────────────────────
+exports.generateExamHTML = (data) => {
+  const { content, title, subject, groupName, teacher, totalItems, examType } = data;
+  const date = new Date().toLocaleDateString('es-MX', { 
+    year: 'numeric', month: 'long', day: 'numeric' 
+  });
+
+  // Parser de texto plano del examen a HTML estructurado
+  const parseExamContent = (raw) => {
+    if (!raw) return '<p>Sin contenido</p>';
+    
+    const lines = raw.split('\n').filter(l => l.trim());
+    let html = '';
+    let inOptions = false;
+    let qNumber   = 0;
+
+    for (const line of lines) {
+      const t = line.trim();
+
+      // Encabezado del examen (====)
+      if (t.startsWith('===') || t.startsWith('---')) continue;
+
+      // Instrucciones / bloques de texto con **
+      if (t.startsWith('**') && t.endsWith('**')) {
+        html += `<div class="exam-instruction">${t.replace(/\*\*/g,'')}</div>`;
+        continue;
+      }
+
+      // Pregunta numerada: "1." o "1)"
+      const qMatch = t.match(/^(\d+)[.)]\s+(.+)/);
+      if (qMatch) {
+        qNumber++;
+        inOptions = true;
+        html += `
+          <div class="exam-question">
+            <div class="q-number">${qMatch[1]}</div>
+            <div class="q-body">
+              <div class="q-text">${qMatch[2]}</div>
+              <div class="q-options" id="opts-${qNumber}">`;
+        continue;
+      }
+
+      // Opción: "a)" "b)" "c)" "d)"
+      const optMatch = t.match(/^([a-dA-D])[).]\s+(.+)/);
+      if (optMatch && inOptions) {
+        html += `<div class="q-option">
+          <span class="opt-letter">${optMatch[1].toUpperCase()}</span>
+          <span class="opt-text">${optMatch[2]}</span>
+        </div>`;
+        // Espacio para respuesta abierta al final de cada opción d)
+        if (optMatch[1].toLowerCase() === 'd') {
+          html += `</div><div class="q-answer-line"></div></div></div>`;
+          inOptions = false;
+        }
+        continue;
+      }
+
+      // Línea de respuesta abierta o espacio en blanco
+      if (t.startsWith('R:') || t.startsWith('Respuesta:')) {
+        html += `<div class="q-answer-open">${t}</div>`;
+        if (inOptions) { html += '</div></div></div>'; inOptions = false; }
+        continue;
+      }
+
+      // Acción de seguimiento u otro texto
+      if (t && !inOptions) {
+        html += `<p class="exam-note">${t}</p>`;
+      }
+    }
+
+    // Cerrar pregunta si quedó abierta
+    if (inOptions) html += '</div><div class="q-answer-line"></div></div></div>';
+
+    return html;
+  };
+
+  const examCSS = `
+    ${PDF_STYLES}
+    /* ── Exam specific ── */
+    .exam-header {
+      background: #0a1628;
+      color: white;
+      padding: 28px 40px;
+      margin: -40px -50px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .exam-header-left h1 { font-size: 20pt; font-weight: 800; margin-bottom: 4px; color: #fff; }
+    .exam-header-left p  { font-size: 10pt; color: rgba(255,255,255,0.55); }
+    .exam-header-right   { text-align: right; }
+    .exam-header-right .school { font-size: 9pt; color: rgba(255,255,255,0.5); }
+    .exam-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .exam-meta-item {
+      padding: 10px 16px;
+      border-right: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .exam-meta-item:last-child { border-right: none; }
+    .exam-meta-label { font-size: 7.5pt; letter-spacing: .1em; text-transform: uppercase; color: #94a3b8; margin-bottom: 3px; }
+    .exam-meta-value { font-size: 11pt; font-weight: 600; color: #1a1a2e; }
+    .exam-student-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 40px;
+    }
+    .exam-student-field { flex: 1; }
+    .exam-student-label { font-size: 8pt; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .exam-student-line  { border-bottom: 1.5px solid #cbd5e1; height: 24px; }
+    .exam-instruction {
+      background: rgba(0,136,255,0.06);
+      border-left: 3px solid #3b82f6;
+      padding: 10px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 10.5pt;
+      color: #1e40af;
+      font-weight: 500;
+    }
+    .exam-question {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 22px;
+      page-break-inside: avoid;
+    }
+    .q-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #0a1628;
+      color: white;
+      font-size: 10pt;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .q-body  { flex: 1; }
+    .q-text  { font-size: 11pt; font-weight: 500; color: #1a1a2e; margin-bottom: 10px; line-height: 1.5; }
+    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; }
+    .q-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      background: #fafafa;
+    }
+    .opt-letter {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #475569;
+      flex-shrink: 0;
+    }
+    .opt-text     { font-size: 10.5pt; color: #374151; line-height: 1.4; }
+    .q-answer-line {
+      border-bottom: 1.5px solid #cbd5e1;
+      margin: 8px 0 4px;
+      height: 28px;
+    }
+    .q-answer-open {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 60px;
+      margin: 8px 0;
+      font-size: 9pt;
+      color: #94a3b8;
+    }
+    .exam-note  { font-size: 9.5pt; color: #64748b; font-style: italic; margin: 8px 0; }
+    .exam-footer {
+      margin-top: 40px;
+      padding-top: 14px;
+      border-top: 2px solid #0a1628;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5pt;
+      color: #94a3b8;
+    }
+    .score-box {
+      border: 1.5px solid #0a1628;
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-weight: 700;
+      color: #0a1628;
+      font-size: 10pt;
+    }
+    @media print {
+      .exam-header { margin: -20px -30px 24px; padding: 20px 30px; }
+    }
+  `;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>${subject} — ${title}</title>
+  <style>${examCSS}</style>
+</head>
+<body>
+  <div class="page">
+    <!-- ENCABEZADO -->
+    <div class="exam-header">
+      <div class="exam-header-left">
+        <h1>${subject}</h1>
+        <p>${title} · ${examType || 'Opción Múltiple'} · ${totalItems || 20} reactivos</p>
+      </div>
+      <div class="exam-header-right">
+        <div style="font-size:11pt;font-weight:700;color:#00f0ff">${teacher?.school || 'IntelliExam'}</div>
+        <div class="school">Ciclo ${new Date().getFullYear()}–${new Date().getFullYear()+1}</div>
+        <div class="school" style="margin-top:6px">${date}</div>
+      </div>
+    </div>
+
+    <!-- META -->
+    <div class="exam-meta">
+      <div class="exam-meta-item">
+        <div class="exam-meta-label">Materia</div>
+        <div class="exam-meta-value">${subject}</div>
+      </div>
+      <div class="exam-meta-item">
+        <div class="exam-meta-label">Grado</div>
+        <div class="exam-meta-value">${teacher?.grade || groupName || '—'}</div>
+      </div>
+      <div class="exam-meta-item">
+        <div class="exam-meta-label">Tipo</div>
+        <div class="exam-meta-value">${examType || 'Opción Múltiple'}</div>
+      </div>
+      <div class="exam-meta-item">
+        <div class="exam-meta-label">Reactivos</div>
+        <div class="exam-meta-value">${totalItems || 20}</div>
+      </div>
+    </div>
+
+    <!-- DATOS DEL ALUMNO -->
+    <div class="exam-student-box">
+      <div class="exam-student-field">
+        <div class="exam-student-label">Nombre del alumno</div>
+        <div class="exam-student-line"></div>
+      </div>
+      <div class="exam-student-field" style="max-width:140px">
+        <div class="exam-student-label">N° lista</div>
+        <div class="exam-student-line"></div>
+      </div>
+      <div class="exam-student-field" style="max-width:140px">
+        <div class="exam-student-label">Fecha</div>
+        <div class="exam-student-line"></div>
+      </div>
+    </div>
+
+    <!-- PREGUNTAS -->
+    ${parseExamContent(content)}
+
+    <!-- FOOTER -->
+    <div class="exam-footer">
+      <span>IntelliExam · Generado por Ameyalli IA · ${teacher?.full_name || 'Docente'}</span>
+      <div class="score-box">Calificación: _______ / 10</div>
+    </div>
+  </div>
+</body>
+</html>`;
+};
+
 // ── Exportar CSV ───────────────────────────────────────────────────────────────
 exports.exportGradesCSV = async (examId) => {
   const results = await turso.execute({
@@ -321,3 +607,4 @@ exports.exportGradesCSV = async (examId) => {
   }
   return csv;
 };
+
