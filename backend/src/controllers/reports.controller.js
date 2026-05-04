@@ -54,7 +54,7 @@ exports.generatePlaneacionPDF = async (req, res, next) => {
     });
     const teacher = teacherResult.rows[0] || {};
 
-    // Generar contenido con Ameyalli IA
+    // Generar contenido con Sophia IA
     console.log('[REPORTS] Iniciando generación de planeación para:', { materia, tema, grado });
     const aiResult = await aiService.generatePlaneacion(req.user.id, {
       materia, grado, tema, duracion, semanas,
@@ -159,7 +159,7 @@ exports.getStudentReport = async (req, res, next) => {
         const { OpenAI } = require('openai');
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         
-        const prompt = `Eres Ameyalli, asistente pedagógica. Actúa como docente. 
+        const prompt = `Eres Sophia, asistente pedagógica. Actúa como docente. 
 El alumno ${student.name} tiene un promedio de ${student.avg}% en ${student.exams_count} exámenes.
 Sus calificaciones recientes son: ${scores.slice(0,3).join(', ')}.
 Notas del docente: ${student.notes || 'Ninguna'}.

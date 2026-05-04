@@ -8,10 +8,10 @@ const { PLANEACION_NEM_2022_PROMPT } = require('../prompts/planeacion-nem-2022')
 const anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// ── Sophia System Prompt ────────────────────────────────────────────────────
-const AMEYALLI_PROMPT = `Eres Sophia, la asistente pedagógica inteligente de IntelliExam.
+// ── Ameyalli System Prompt ────────────────────────────────────────────────────
+const AMEYALLI_PROMPT = `Eres Ameyalli, la asistente pedagógica inteligente de IntelliExam.
 
-Tu nombre significa "sabiduría" — eres una fuente de conocimiento pedagógico cálida, confiable y profesional.
+Tu nombre significa "manantial" en náhuatl — eres una fuente de conocimiento pedagógico cálida, confiable y profesional.
 
 PERSONALIDAD:
 - Amable, cálida y empática — entiendes el trabajo arduo de los docentes de **Primaria**.
@@ -109,7 +109,6 @@ async function queryRAGSep(query) {
     return null;
   }
 }
-exports.queryRAGSep = queryRAGSep;
 
 // ── Chat principal ────────────────────────────────────────────────────────────
 exports.chat = async (teacherId, messages, context = {}) => {
@@ -279,16 +278,14 @@ Usa un tono profesional, experto y accionable. Devuelve el contenido en formato 
   }
 
   try {
-    const response = await openaiClient.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemWithRag },
-        { role: 'user', content: prompt }
-      ],
+    const response = await anthropicClient.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4000,
+      system: systemWithRag,
+      messages: [{ role: 'user', content: prompt }]
     });
 
-    const content = response.choices[0].message.content;
+    const content = response.content[0].text;
     const usage = response.usage;
 
     // Persistir planeación
@@ -296,17 +293,17 @@ Usa un tono profesional, experto y accionable. Devuelve el contenido en formato 
       await turso.execute({
         sql: `INSERT INTO planeaciones (id, teacher_id, materia, grado, tema, content, tokens_used)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [crypto.randomUUID(), teacherId, materia, grado, tema, content, usage.total_tokens]
+        args: [crypto.randomUUID(), teacherId, materia, grado, tema, content, usage.output_tokens]
       });
     } catch (dbErr) {
       logError('DB-PLANNING', dbErr, { teacherId, materia, tema });
     }
 
-    logAIUsage(teacherId, 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'planeacion');
+    logAIUsage(teacherId, 'claude-3-5-sonnet', usage.input_tokens, usage.output_tokens, 'planeacion');
     return { 
       success: true,
       content, 
-      tokens_used: usage.total_tokens, 
+      tokens_used: usage.output_tokens, 
       materia, tema, grado 
     };
   } catch (err) {

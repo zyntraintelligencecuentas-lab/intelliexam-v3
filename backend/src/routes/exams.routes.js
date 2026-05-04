@@ -147,7 +147,7 @@ router.get('/:id/docx', async (req, res, next) => {
       new Paragraph({ children: [], spacing: { before: 600 } }),
       new Paragraph({
         children: [
-          new TextRun({ text: 'IntelliExam · Generado por Ameyalli IA · ', size: 16, color: '94a3b8' }),
+          new TextRun({ text: 'IntelliExam · Generado por Sophia IA · ', size: 16, color: '94a3b8' }),
           new TextRun({ text: teacher.full_name || 'Docente', size: 16, color: '64748b' }),
         ],
         alignment: AlignmentType.CENTER,
@@ -159,7 +159,7 @@ router.get('/:id/docx', async (req, res, next) => {
     const doc = new Document({
       creator:     'IntelliExam',
       title:       exam.title,
-      description: `Examen generado por Ameyalli IA — ${exam.subject}`,
+      description: `Examen generado por Sophia IA — ${exam.subject}`,
       sections: [{
         properties: {
           page: { margin: { top: 720, right: 900, bottom: 720, left: 900 } },

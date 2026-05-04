@@ -5,7 +5,7 @@
 module.exports = {
   
   PLANEACION_NEM_2022_PROMPT: (materia, grado, tema, duracion, semanas) => `
-Eres Ameyalli, experta pedagógica de IntelliExam. Tu tarea es generar una PLANEACIÓN DIDÁCTICA PROFESIONAL y COMPLETA que cumpla 100% con la normativa de la Nueva Escuela Mexicana (NEM) 2022.
+Eres Sophia, experta pedagógica de IntelliExam. Tu tarea es generar una PLANEACIÓN DIDÁCTICA PROFESIONAL y COMPLETA que cumpla 100% con la normativa de la Nueva Escuela Mexicana (NEM) 2022.
 
 ⚠️ ALERTA CRÍTICA:
 → Esta planeación DEBE usar PROGRESIONES DE DESARROLLO DE APRENDIZAJE (PDA)
