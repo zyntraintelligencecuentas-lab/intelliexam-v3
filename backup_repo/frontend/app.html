@@ -6,7 +6,6 @@
 <title>IntelliExam v4 · Preview</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════
    INTELLIEXAM v4 · OLED Black + Bento + Spatial
@@ -1640,11 +1639,11 @@ body::before {
       <div class="bento bento-11">
         <div class="card">
           <div class="card-head"><div class="card-title">Perfil docente</div></div>
-          <div class="fg"><label class="fl">Nombre Completo</label><input class="fi" id="st-name" type="text" placeholder="Tu nombre"></div>
-          <div class="fg"><label class="fl">Correo (Solo lectura)</label><input class="fi" id="st-email" type="email" readonly style="opacity:0.6"></div>
+          <div class="fg"><label class="fl">Nombre</label><input class="fi" id="st-name" type="text" placeholder="Tu nombre"></div>
+          <div class="fg"><label class="fl">Correo</label><input class="fi" id="st-email" type="email" placeholder="tu@email.com"></div>
           <div class="fg"><label class="fl">Escuela</label><input class="fi" id="st-school" type="text" placeholder="Nombre de tu escuela"></div>
-          <div class="fg"><label class="fl">Grado y Grupo</label><input class="fi" id="st-group" type="text" placeholder="Ej: 3°A"></div>
-          <button class="btn btn-primary" onclick="saveSettings()" style="width:100%;margin-top:6px;justify-content:center">Guardar cambios</button>
+          <div class="fg"><label class="fl">Grado y grupo</label><input class="fi" id="st-group" type="text" placeholder="Ej: 3°A"></div>
+          <button class="btn btn-primary" onclick="toast('Cambios guardados','ok')" style="width:100%;margin-top:6px;justify-content:center">Guardar cambios</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <div class="insight">
@@ -1902,7 +1901,7 @@ async function init() {
   try {
     await loadDashboard();
     await loadUserUI();
-    loadChatSessions(); // Cargar historial de chat al inicio
+    renderChatList(); // Cargar historial de chat al inicio
   } catch (err) {
     console.error('[BOOT]', err);
     toast('Error conectando al servidor', 'err');
@@ -2050,28 +2049,13 @@ function go(name) {
   if (name === 'dashboard') loadDashboard();
   if (name === 'reports') renderReports();
   if (name === 'exams') renderExams();
-  
-  // ← FIX: Analítica requiere inicializar charts ANTES de renderizar
   if (name === 'analytics') {
-    initCharts();
     setTimeout(() => {
       if (typeof renderCharts2 === 'function') renderCharts2();
     }, 150);
   }
-  
-  // ← FIX: Planeaciones debe cargar historial
   if (name === 'planning') {
-    if (typeof loadPlanningHistory === 'function') loadPlanningHistory();
-  }
-  
-  // ← FIX: Configuración debe cargar datos actuales
-  if (name === 'settings') {
-    if (typeof loadSettings === 'function') loadSettings();
-  }
-  
-  // ← FIX: Chat IA debe cargar sesiones guardadas
-  if (name === 'ai') {
-    if (typeof loadChatSessions === 'function') loadChatSessions();
+    loadPlanningHistory();
   }
 }
 
@@ -2500,14 +2484,14 @@ async function downloadExamDOCX(id) {
 }
 
 async function sendMsg() {
-  const inp = document.getElementById('ai-input');
+  const inp = document.getElementById('chat-in');
   const msg = inp.value.trim();
   if (!msg) return;
   inp.value = '';
-  inp.style.height = 'auto'; // Reset height for textarea
 
   appendMsg('user', msg);
-  
+  chatApiHistory.push({ role: 'user', content: msg });
+
   // Typing indicator
   const box    = document.getElementById('chat-msgs');
   const typing = document.createElement('div');
@@ -2527,27 +2511,32 @@ async function sendMsg() {
         sessionId: activeSessionId,
         context: {
           teacherName: (getUser()?.full_name || 'Docente'),
+          students:  window.IE_STUDENTS || [],
         },
       }),
     });
 
     document.getElementById('typing')?.remove();
 
-    if (res && res.success) {
+    if (res) {
       const isNew = !activeSessionId;
       activeSessionId = res.session_id;
-      chatApiHistory.push({ role: 'user', content: msg });
       chatApiHistory.push({ role: 'assistant', content: res.content });
 
       appendMsg('ai', res.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'));
       
-      if (isNew) loadChatSessions(); // Recargar lista si es chat nuevo
+      if (isNew) renderChatList(); // Recargar lista si es chat nuevo
     }
   } catch (err) {
     document.getElementById('typing')?.remove();
     appendMsg('ai', 'Ameyalli no está disponible en este momento. Verifica tu conexión.');
     toast('Error conectando con Ameyalli', 'err');
   }
+}
+
+function qmsg(text) {
+  document.getElementById('chat-in').value = text;
+  sendMsg();
 }
 
 async function newChat() {
@@ -2566,7 +2555,7 @@ async function newChat() {
       </div>
     </div>
   `;
-  loadChatSessions();
+  renderChatList();
 }
 
 function fillChat(text) {
@@ -2579,27 +2568,27 @@ function fillChat(text) {
   }
 }
 
-async function loadChatSessions() {
+async function renderChatList() {
   const list = document.getElementById('chat-sessions-list');
   if (!list) return;
   
   try {
-    const res = await api('/ai/chat/sessions');
-    const sessions = res.sessions || [];
+    const data = await api('/ai/sessions');
+    const sessions = data.sessions || [];
     
     if (sessions.length === 0) {
-      list.innerHTML = '<div class="sidebar-divider" style="text-align:center;margin-top:20px;color:rgba(255,255,255,0.3)">No hay chats recientes</div>';
+      list.innerHTML = '<div class="sidebar-divider" style="text-align:center;margin-top:20px">No hay chats recientes</div>';
       return;
     }
     
     list.innerHTML = sessions.map(s => `
-      <div class="session-item ${activeSessionId === s.session_id ? 'active' : ''}" onclick="loadChatSession('${s.session_id}')">
+      <div class="session-item ${activeSessionId === s.session_id ? 'active' : ''}" onclick="loadChat('${s.session_id}')">
         <div class="session-icon">💬</div>
         <div class="session-info">
-          <div class="session-topic">${(s.first_user_msg || 'Nueva conversación').substring(0, 30)}...</div>
-          <div class="session-date">${formatRelativeDate(s.last_msg_at)}</div>
+          <div class="session-topic">${s.first_user_msg || 'Nueva conversación'}</div>
+          <div class="session-date">${new Date(s.started_at).toLocaleDateString()}</div>
         </div>
-        <button class="session-delete" onclick="event.stopPropagation(); deleteChatSession('${s.session_id}')" title="Eliminar">×</button>
+        <button class="session-delete" onclick="event.stopPropagation(); deleteChat('${s.session_id}')" title="Eliminar">×</button>
       </div>
     `).join('');
   } catch (err) {
@@ -2607,48 +2596,40 @@ async function loadChatSessions() {
   }
 }
 
-async function loadChatSession(sessionId) {
+async function loadChat(sessionId) {
   if (activeSessionId === sessionId) return;
   toast('Cargando chat...', 'ok');
   try {
-    const data = await api(`/ai/chat/sessions/${sessionId}`);
+    const data = await api(`/ai/sessions/${sessionId}`);
     activeSessionId = sessionId;
     chatApiHistory = data.messages.map(m => ({ role: m.role, content: m.content }));
     
     const box = document.getElementById('chat-msgs');
     box.innerHTML = '';
     data.messages.forEach(m => appendMsg(m.role, m.content));
-    loadChatSessions(); 
+    renderChatList(); 
     if (window.innerWidth < 900) closeSidebar();
   } catch (err) {
     toast('Error al cargar chat', 'err');
   }
 }
+    toast('Error al cargar la sesión', 'err');
+  }
+}
 
-async function deleteChatSession(sessionId) {
+async function deleteChat(sessionId) {
   if (!confirm('¿Seguro que quieres eliminar esta conversación?')) return;
   try {
-    await api(`/ai/chat/sessions/${sessionId}`, { method: 'DELETE' });
+    await api(`/ai/sessions/${sessionId}`, { method: 'DELETE' });
     toast('Chat eliminado', 'ok');
     if (activeSessionId === sessionId) {
       newChat();
     } else {
-      loadChatSessions();
+      renderChatList();
     }
   } catch (err) {
     toast('Error al eliminar chat', 'err');
   }
-}
-
-function formatRelativeDate(isoDate) {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diff = now - date;
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  if (mins < 60) return `Hace ${mins}m`;
-  if (hours < 24) return `Hace ${hours}h`;
-  return date.toLocaleDateString();
 }
 
 async function downloadPlanning() {
@@ -2667,70 +2648,6 @@ async function downloadPlanning() {
   } catch (err) {
     toast('Error al generar PDF: ' + err.message, 'err');
   }
-}
-
-async function loadSettings() {
-  try {
-    const res = await api('/settings');
-    const p = res.profile;
-    if (!p) return;
-    
-    document.getElementById('st-name').value = p.full_name || '';
-    document.getElementById('st-email').value = p.email || '';
-    document.getElementById('st-school').value = p.school || '';
-    document.getElementById('st-group').value = `${p.grade || ''}${p.group_name || ''}`;
-    
-    // Actualizar badges de uso si existen
-    updateUsageBars(p);
-  } catch (err) {
-    toast('Error al cargar configuración', 'err');
-  }
-}
-
-async function saveSettings() {
-  const name = document.getElementById('st-name').value;
-  const school = document.getElementById('st-school').value;
-  const groupRaw = document.getElementById('st-group').value;
-  
-  // Parsear grado y grupo (ej: 3°A -> 3 y A)
-  const grade = groupRaw.match(/\d+/)?.[0] || '';
-  const group = groupRaw.replace(/\d+|°/g, '').trim();
-
-  try {
-    await api('/settings/profile', {
-      method: 'PUT',
-      body: JSON.stringify({
-        full_name: name,
-        school: school,
-        grade: grade,
-        group_name: group
-      })
-    });
-    
-    toast('Perfil actualizado', 'ok');
-    loadDashboard(); // Recargar UI global
-  } catch (err) {
-    toast(err.message, 'err');
-  }
-}
-
-function updateUsageBars(profile) {
-  // Simulación de uso basado en datos reales de la cuenta
-  const examsPct = Math.min((profile.usage_exams || 0) / 10 * 100, 100);
-  const reportsPct = Math.min((profile.usage_reports || 0) / 5 * 100, 100);
-  const aiPct = Math.min((profile.usage_ai || 0) / 50 * 100, 100);
-
-  const fills = document.querySelectorAll('.prog-fill');
-  const pcts = document.querySelectorAll('.prog-pct');
-  
-  if (fills[0]) fills[0].style.width = examsPct + '%';
-  if (pcts[0]) pcts[0].textContent = (profile.usage_exams || 0) + '/10';
-  
-  if (fills[1]) fills[1].style.width = reportsPct + '%';
-  if (pcts[1]) pcts[1].textContent = (profile.usage_reports || 0) + '/5';
-  
-  if (fills[2]) fills[2].style.width = aiPct + '%';
-  if (pcts[2]) pcts[2].textContent = (profile.usage_ai || 0) + '/50';
 }
 
 function copyPlanning() {
@@ -2770,57 +2687,42 @@ Chart.defaults.font.size=10.5;
 
 let chartsReady=false;
 function initCharts() {
-  if (chartsReady) return;
-  chartsReady = true;
-  
-  console.log('[CHARTS] Initializing...');
-  
-  const chartMain = document.getElementById('chartMain');
-  const chartDist = document.getElementById('chartDist');
-  const chartTrend = document.getElementById('chartTrend');
-  const chartRadar = document.getElementById('chartRadar');
-  
-  if (!chartMain) {
-    console.warn('[CHARTS] Canvas chartMain not found');
-    return;
-  }
+  if(chartsReady) return; chartsReady=true;
 
-  new Chart(chartMain,{
+  new Chart(document.getElementById('chartMain'),{
     type:'line',
     data:{
-      labels:['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6'],
+      labels:['—','—','—','—','—','—'],
       datasets:[{
         label:'Promedio',
-        data:[7.2, 7.5, 7.8, 7.6, 8.1, 8.3],
+        data:[0,0,0,0,0,0],
         borderColor:'#60a5fa',
         backgroundColor:'rgba(96,165,250,0.06)',
         fill:true,tension:0.45,
         pointBackgroundColor:'#60a5fa',pointRadius:4,borderWidth:2
       },{
         label:'Objetivo',
-        data:[7.5,7.5,7.5,7.5,7.5,7.5],
+        data:[75,75,75,75,75,75],
         borderColor:'rgba(118,255,138,0.3)',
         borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false
       }]
     },
     options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{y:{min:5,max:10,grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false}}}}
+      scales:{y:{min:60,max:100,grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false}}}}
   });
 
-  if (chartDist) {
-    new Chart(chartDist,{
-      type:'doughnut',
-      data:{
-        labels:['9-10','8-8.9','7-7.9','6-6.9','<6'],
-        datasets:[{
-          data:[12, 15, 3, 2, 1],
-          backgroundColor:['#76ff8a','#60a5fa','#f59e0b','#fb923c','#f43f5e'],
-          borderColor:'transparent',borderRadius:3,spacing:3
-        }]
-      },
-      options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{boxWidth:7,padding:10}}}}
-    });
-  }
+  new Chart(document.getElementById('chartDist'),{
+    type:'doughnut',
+    data:{
+      labels:['90-100','80-89','70-79','60-69','<60'],
+      datasets:[{
+        data:[0,0,0,0,0],
+        backgroundColor:['#76ff8a','#60a5fa','#f59e0b','#fb923c','#f43f5e'],
+        borderColor:'transparent',borderRadius:3,spacing:3
+      }]
+    },
+    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{boxWidth:7,padding:10}}}}
+  });
 }
 
 let charts2Ready=false;

@@ -439,9 +439,9 @@ body {
 </div>
 
 <script>
-const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.'))
   ? 'http://localhost:3001/api'
-  : 'https://intelliexam-v3-production.up.railway.app/api';
+  : window.location.origin + '/api';
 let pviz = false, toastT = null;
 
 /* ── Particles ── */

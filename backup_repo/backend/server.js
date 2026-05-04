@@ -12,7 +12,6 @@ const scanRoutes = require('./src/routes/scan.routes');
 const reportRoutes = require('./src/routes/reports.routes');
 const aiRoutes = require('./src/routes/ai.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
-const settingsRoutes = require('./src/routes/settings.routes');
 const errorHandler = require('./src/middleware/errorHandler');
 const { globalLimiter } = require('./src/middleware/rateLimiter');
 const { requestLogger, logger } = require('./src/middleware/logger');
@@ -57,7 +56,6 @@ app.use('/api/scan', scanRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/settings', settingsRoutes);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',

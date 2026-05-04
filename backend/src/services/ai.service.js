@@ -150,21 +150,39 @@ exports.chat = async (teacherId, messages, context = {}) => {
   const usage        = response.usage;
   const msgId        = crypto.randomUUID();
   const sessionId    = context.sessionId || crypto.randomUUID();
+  const isNewSession = !context.sessionId;
 
   // Log de uso de IA
   logAIUsage(teacherId, 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'chat');
 
-  // Persistir en Turso
-  await turso.execute({
-    sql: `INSERT INTO ai_chats (id, teacher_id, role, content, tokens_used, session_id) VALUES (?, ?, ?, ?, ?, ?)
-          ON CONFLICT DO NOTHING`,
-    args: [crypto.randomUUID(), teacherId, 'user', lastUserMsg, usage.prompt_tokens, sessionId],
-  });
+  // Persistir en Turso (User message)
+  try {
+    await turso.execute({
+      sql: `INSERT INTO ai_chats (id, teacher_id, role, content, tokens_used, session_id, topic) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT DO NOTHING`,
+      args: [
+        crypto.randomUUID(), 
+        teacherId, 
+        'user', 
+        lastUserMsg || '(sin contenido)', 
+        usage.prompt_tokens, 
+        sessionId, 
+        isNewSession ? (lastUserMsg ? lastUserMsg.substring(0, 45) + '...' : 'Nueva sesión') : null
+      ],
+    });
+  } catch (dbErr) {
+    logError('DB-CHAT-USER', dbErr, { teacherId, sessionId });
+  }
 
-  await turso.execute({
-    sql: `INSERT INTO ai_chats (id, teacher_id, role, content, tokens_used, session_id) VALUES (?, ?, ?, ?, ?, ?)`,
-    args: [msgId, teacherId, 'assistant', content, usage.completion_tokens, sessionId],
-  });
+  // Persistir en Turso (AI response)
+  try {
+    await turso.execute({
+      sql: `INSERT INTO ai_chats (id, teacher_id, role, content, tokens_used, session_id) VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [msgId, teacherId, 'assistant', content, usage.completion_tokens, sessionId],
+    });
+  } catch (dbErr) {
+    logError('DB-CHAT-AI', dbErr, { teacherId, sessionId });
+  }
 
   return { content, tokens_used: usage.total_tokens, session_id: sessionId };
 };
@@ -197,19 +215,25 @@ exports.listChatSessions = async (teacherId) => {
                    MAX(created_at) as last_msg_at,
                    COUNT(*) as msg_count,
                    (SELECT content FROM ai_chats
-                    WHERE teacher_id = t.teacher_id AND session_id = t.session_id AND role = 'user'
-                    ORDER BY created_at ASC LIMIT 1) as first_user_msg
+                    WHERE teacher_id = ? AND session_id = t.session_id AND role = 'user'
+                    ORDER BY created_at ASC LIMIT 1) as first_user_msg,
+                   (SELECT topic FROM ai_chats
+                    WHERE teacher_id = ? AND session_id = t.session_id AND topic IS NOT NULL
+                    ORDER BY created_at ASC LIMIT 1) as session_topic
             FROM ai_chats t
             WHERE teacher_id = ?
             GROUP BY session_id
             ORDER BY last_msg_at DESC
-            LIMIT 20`,
-      args: [teacherId],
+            LIMIT 40`,
+      args: [teacherId, teacherId, teacherId],
     });
 
-    return result.rows || [];
+    return (result.rows || []).map(r => ({
+      ...r,
+      first_user_msg: r.session_topic || r.first_user_msg || 'Conversación vacía'
+    }));
   } catch (err) {
-    logError('AI', err, { teacherId, category: 'sessions' });
+    logError('AI-SESSIONS', err, { teacherId });
     return [];
   }
 };
@@ -227,33 +251,64 @@ exports.deleteChatSession = async (teacherId, sessionId) => {
 exports.generatePlaneacion = async (teacherId, params) => {
   const { materia, grado, tema, duracion = '50 minutos', semanas = 1 } = params;
 
-  const prompt = PLANEACION_NEM_2022_PROMPT(materia, grado, tema, duracion, semanas);
+  // Prompt estructurado para NEM 2022
+  const prompt = `Actúa como un experto en Pedagogía Crítica y la Nueva Escuela Mexicana (NEM 2022). 
+Genera una planeación didáctica profesional para:
+- Materia: ${materia}
+- Grado: ${grado}
+- Tema: ${tema}
+- Duración por sesión: ${duracion}
+- Periodo: ${semanas} semana(s)
+
+La planeación DEBE incluir los siguientes apartados obligatorios:
+1. CAMPO FORMATIVO Y EJES ARTICULADORES.
+2. PROCESOS DE DESARROLLO DE APRENDIZAJE (PDA) - Basados en el programa sintético actual.
+3. METODOLOGÍA (Indicar si es Proyectos, STEAM, Aprendizaje Servicio o Problemas).
+4. SECUENCIA DIDÁCTICA DETALLADA (Inicio, Desarrollo, Cierre por sesión).
+5. ESTRATEGIAS DE EVALUACIÓN FORMATIVA (Rúbricas, listas de cotejo, etc.).
+6. VINCULACIÓN CON LA COMUNIDAD.
+
+Usa un tono profesional, experto y accionable. Devuelve el contenido en formato Markdown estructurado.`;
 
   const ragContext = await queryRAGSep(`${materia} ${tema} ${grado} planeación SEP NEM 2022`);
 
   let systemWithRag = AMEYALLI_PROMPT;
   if (ragContext) {
-    systemWithRag += `\n\n[LIBROS SEP RELACIONADOS]\n${ragContext}`;
+    systemWithRag += `\n\n[CONOCIMIENTO SEP (USA ESTO)]\n${ragContext}`;
   }
 
   try {
-    const response = await openaiClient.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemWithRag },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 4096, 
+    const response = await anthropicClient.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      system: systemWithRag,
+      messages: [{ role: 'user', content: prompt }]
     });
 
-    const content = response.choices[0].message?.content || 'Error: No se generó contenido.';
+    const content = response.content[0].text;
     const usage = response.usage;
 
-    logAIUsage(teacherId, 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'planeacion');
-    return { content, tokens_used: usage.total_tokens, materia, tema, grado };
+    // Persistir planeación
+    try {
+      await turso.execute({
+        sql: `INSERT INTO planeaciones (id, teacher_id, materia, grado, tema, content, tokens_used)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [crypto.randomUUID(), teacherId, materia, grado, tema, content, usage.output_tokens]
+      });
+    } catch (dbErr) {
+      logError('DB-PLANNING', dbErr, { teacherId, materia, tema });
+    }
+
+    logAIUsage(teacherId, 'claude-3-5-sonnet', usage.input_tokens, usage.output_tokens, 'planeacion');
+    return { 
+      success: true,
+      content, 
+      tokens_used: usage.output_tokens, 
+      materia, tema, grado 
+    };
   } catch (err) {
-    logError('AI', err, { teacherId, feature: 'planeacion', materia, tema });
-    throw new Error('Error al generar planeación con OpenAI: ' + err.message);
+    logError('AI_PLANNING', err, { teacherId, materia, tema });
+    throw err;
   }
 };
 

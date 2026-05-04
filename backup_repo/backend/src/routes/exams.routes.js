@@ -10,17 +10,18 @@ router.post('/', ctrl.create);
 router.get('/:id', ctrl.getOne);
 router.delete('/:id', ctrl.remove);
 
-// Descargar examen como PDF profesional (PDFKit)
+// Descargar examen como HTML-PDF
 router.get('/:id/pdf', async (req, res, next) => {
   try {
-    const { turso } = require('../config/turso');
-    const pdfService = require('../services/pdf.service');
+    const { turso }      = require('../config/turso');
+    const pdfService     = require('../services/pdf.service');
 
     const examRes = await turso.execute({
       sql: `SELECT * FROM exams WHERE id = ? AND teacher_id = ?`,
       args: [req.params.id, req.user.id],
     });
     if (!examRes.rows.length) return res.status(404).json({ error: 'Examen no encontrado' });
+
     const exam = examRes.rows[0];
 
     const teacherRes = await turso.execute({
@@ -29,11 +30,17 @@ router.get('/:id/pdf', async (req, res, next) => {
     });
     const teacher = teacherRes.rows[0] || {};
 
-    const safeTitle = (exam.title || 'examen').replace(/\s+/g, '_');
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.pdf"`);
+    const html = pdfService.generateExamHTML({
+      content:    exam.content,
+      title:      exam.title,
+      subject:    exam.subject,
+      groupName:  exam.group_name,
+      teacher,
+      totalItems: exam.total_items,
+      examType:   exam.exam_type || 'Opción Múltiple',
+    });
 
-    pdfService.generateExamPDF(exam, teacher, res);
+    res.json({ html, exam_id: exam.id, title: exam.title, subject: exam.subject });
   } catch (err) { next(err); }
 });
 
