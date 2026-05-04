@@ -278,14 +278,16 @@ Usa un tono profesional, experto y accionable. Devuelve el contenido en formato 
   }
 
   try {
-    const response = await anthropicClient.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    const response = await openaiClient.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemWithRag },
+        { role: 'user', content: prompt }
+      ],
       max_tokens: 4000,
-      system: systemWithRag,
-      messages: [{ role: 'user', content: prompt }]
     });
 
-    const content = response.content[0].text;
+    const content = response.choices[0].message.content;
     const usage = response.usage;
 
     // Persistir planeación
@@ -293,17 +295,17 @@ Usa un tono profesional, experto y accionable. Devuelve el contenido en formato 
       await turso.execute({
         sql: `INSERT INTO planeaciones (id, teacher_id, materia, grado, tema, content, tokens_used)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [crypto.randomUUID(), teacherId, materia, grado, tema, content, usage.output_tokens]
+        args: [crypto.randomUUID(), teacherId, materia, grado, tema, content, usage.total_tokens]
       });
     } catch (dbErr) {
       logError('DB-PLANNING', dbErr, { teacherId, materia, tema });
     }
 
-    logAIUsage(teacherId, 'claude-3-5-sonnet', usage.input_tokens, usage.output_tokens, 'planeacion');
+    logAIUsage(teacherId, 'gpt-4o', usage.prompt_tokens, usage.completion_tokens, 'planeacion');
     return { 
       success: true,
       content, 
-      tokens_used: usage.output_tokens, 
+      tokens_used: usage.total_tokens, 
       materia, tema, grado 
     };
   } catch (err) {
