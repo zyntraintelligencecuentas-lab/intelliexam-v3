@@ -33,7 +33,7 @@ exports.updateProfile = async (req, res, next) => {
 
     await turso.execute({
       sql: `UPDATE profiles 
-            SET full_name = ?, school = ?, grade = ?, group_name = ?, updated_at = CURRENT_TIMESTAMP
+            SET full_name = ?, school = ?, grade = ?, group_name = ?
             WHERE id = ?`,
       args: [full_name, school, grade, group_name, req.user.id]
     });
